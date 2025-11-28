@@ -111,7 +111,7 @@ function jump(playerNum) {
         setTimeout(() => {
             player1.classList.remove('jumping');
             player1Jumping = false;
-        }, 300);
+        }, 500);
     } else if (playerNum === 2 && !player2Jumping) {
         player2Jumping = true;
         player2.classList.add('jumping');
@@ -119,7 +119,7 @@ function jump(playerNum) {
         setTimeout(() => {
             player2.classList.remove('jumping');
             player2Jumping = false;
-        }, 300);
+        }, 500);
     }
 }
 

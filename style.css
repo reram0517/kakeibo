@@ -141,15 +141,15 @@ body {
 }
 
 .player.jumping {
-    transition: bottom 0.3s ease-out, top 0.3s ease-out;
+    transition: bottom 0.5s ease-out, top 0.5s ease-out;
 }
 
 #player1.jumping {
-    bottom: 120px;
+    bottom: 150px;
 }
 
 #player2.jumping {
-    top: 120px;
+    top: 150px;
 }
 
 .obstacles {
