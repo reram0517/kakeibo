@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ジャンプバトル</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <!-- タイトル画面 -->
+        <div id="titleScreen">
+            <h1>ジャンプバトル</h1>
+            <p>障害物を避けて生き残れ!</p>
+            <button id="startBtn">ゲームスタート</button>
+            <div class="instructions">
+                <h3>遊び方</h3>
+                <p>👆 プレイヤー1（上）: 上側をタップでジャンプ</p>
+                <p>👇 プレイヤー2（下）: 下側をタップでジャンプ</p>
+                <p>障害物に当たったら負け!</p>
+            </div>
+        </div>
+
+        <!-- ゲーム画面 -->
+        <div id="gameScreen" class="hidden">
+            <!-- プレイヤー1エリア（上） -->
+            <div id="player1Area" class="playerArea">
+                <div class="score">P1: <span id="score1">0</span></div>
+                <div id="player1" class="player"></div>
+                <div id="obstacles1" class="obstacles"></div>
+            </div>
+
+            <!-- 中央の境界線 -->
+            <div id="centerLine"></div>
+
+            <!-- プレイヤー2エリア（下） -->
+            <div id="player2Area" class="playerArea">
+                <div id="obstacles2" class="obstacles"></div>
+                <div id="player2" class="player"></div>
+                <div class="score">P2: <span id="score2">0</span></div>
+            </div>
+        </div>
+
+        <!-- ゲームオーバー画面 -->
+        <div id="gameOverScreen" class="hidden">
+            <h1 id="winnerText">勝者: プレイヤー1</h1>
+            <div class="finalScores">
+                <p>プレイヤー1: <span id="finalScore1">0</span>点</p>
+                <p>プレイヤー2: <span id="finalScore2">0</span>点</p>
+            </div>
+            <button id="restartBtn">もう一度プレイ</button>
+            <button id="titleBtn">タイトルに戻る</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
