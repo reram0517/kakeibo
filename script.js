@@ -1095,6 +1095,37 @@ displayDayTransactions = function(date) {
     const day = date.getDate();
     title.textContent = `${month}月${day}日の取引`;
     
+    // 収支サマリーを計算
+    let dayIncome = 0;
+    let dayExpense = 0;
+    
+    dayTransactions.forEach(t => {
+        if (t.type === 'income') {
+            dayIncome += t.amount;
+        } else {
+            dayExpense += t.amount;
+        }
+    });
+    
+    const dayBalance = dayIncome - dayExpense;
+    
+    // サマリーを更新
+    const dayIncomeEl = document.getElementById('day-income');
+    const dayExpenseEl = document.getElementById('day-expense');
+    const dayBalanceEl = document.getElementById('day-balance');
+    
+    if (dayIncomeEl) dayIncomeEl.textContent = `¥${dayIncome.toLocaleString()}`;
+    if (dayExpenseEl) dayExpenseEl.textContent = `¥${dayExpense.toLocaleString()}`;
+    if (dayBalanceEl) {
+        dayBalanceEl.textContent = `¥${dayBalance.toLocaleString()}`;
+        dayBalanceEl.className = 'day-summary-value balance-text';
+        if (dayBalance > 0) {
+            dayBalanceEl.classList.add('positive');
+        } else if (dayBalance < 0) {
+            dayBalanceEl.classList.add('negative');
+        }
+    }
+    
     const list = document.getElementById('day-transaction-list');
     list.innerHTML = '';
     

@@ -153,6 +153,23 @@
                 <!-- 選択日の取引 -->
                 <div class="selected-day-transactions">
                     <h3 id="selected-day-title">今日の取引</h3>
+                    
+                    <!-- 選択日の収支サマリー -->
+                    <div class="day-summary">
+                        <div class="day-summary-item">
+                            <span class="day-summary-label">収入:</span>
+                            <span class="day-summary-value income-text" id="day-income">¥0</span>
+                        </div>
+                        <div class="day-summary-item">
+                            <span class="day-summary-label">支出:</span>
+                            <span class="day-summary-value expense-text" id="day-expense">¥0</span>
+                        </div>
+                        <div class="day-summary-item">
+                            <span class="day-summary-label">合計:</span>
+                            <span class="day-summary-value balance-text" id="day-balance">¥0</span>
+                        </div>
+                    </div>
+                    
                     <ul id="day-transaction-list"></ul>
                 </div>
             </div>
