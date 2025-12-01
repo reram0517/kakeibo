@@ -2,7 +2,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyAF2wQbwCrnSJMWrRRZC_XkjinzNHl3rPw",
     authDomain: "kakeibo-app-1201.firebaseapp.com",
-    databaseURL: "https://kakeibo-app-1201-default-rtdb.firebaseio.com",
+    databaseURL: "https://kakeibo-app-1201-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "kakeibo-app-1201",
     storageBucket: "kakeibo-app-1201.firebasestorage.app",
     messagingSenderId: "809121724984",
@@ -155,22 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // ログアウトボタン
     document.getElementById('logout-btn').addEventListener('click', () => {
         auth.signOut();
-    });
-    
-    // パスワード表示/非表示切り替え
-    document.querySelectorAll('.toggle-password').forEach(button => {
-        button.addEventListener('click', () => {
-            const targetId = button.dataset.target;
-            const input = document.getElementById(targetId);
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                button.textContent = '🙈';
-            } else {
-                input.type = 'password';
-                button.textContent = '👁️';
-            }
-        });
     });
 });
 

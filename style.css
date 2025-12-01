@@ -100,32 +100,6 @@ body {
     min-height: 20px;
 }
 
-.password-input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.password-input-wrapper input {
-    flex: 1;
-    padding-right: 45px;
-}
-
-.toggle-password {
-    position: absolute;
-    right: 10px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2em;
-    padding: 5px;
-    transition: transform 0.2s;
-}
-
-.toggle-password:hover {
-    transform: scale(1.2);
-}
-
 /* アプリヘッダー */
 .app-header {
     display: flex;
