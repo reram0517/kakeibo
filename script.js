@@ -79,12 +79,15 @@ function loadUserData() {
     userRef.on('value', (snapshot) => {
         const data = snapshot.val();
         transactions = data ? Object.values(data) : [];
-        // UIが準備できてから更新
-        setTimeout(() => {
-            if (typeof updateUI === 'function') {
+        // DOM要素とupdateUI関数が準備できるまで待つ
+        const checkAndUpdate = () => {
+            if (typeof updateUI === 'function' && document.getElementById('total-income')) {
                 updateUI();
+            } else {
+                setTimeout(checkAndUpdate, 50);
             }
-        }, 100);
+        };
+        checkAndUpdate();
     });
 }
 
