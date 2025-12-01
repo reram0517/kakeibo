@@ -79,9 +79,12 @@ function loadUserData() {
     userRef.on('value', (snapshot) => {
         const data = snapshot.val();
         transactions = data ? Object.values(data) : [];
-        if (typeof updateUI === 'function') {
-            updateUI();
-        }
+        // UIが準備できてから更新
+        setTimeout(() => {
+            if (typeof updateUI === 'function') {
+                updateUI();
+            }
+        }, 100);
     });
 }
 
