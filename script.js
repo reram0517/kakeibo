@@ -91,16 +91,8 @@ function loadUserData() {
     });
 }
 
-// UIを更新（早期定義）
-function updateUI() {
-    if (!totalIncomeEl) return; // DOM要素がまだない場合は何もしない
-    updateSummary();
-    displayTransactions();
-    updateCharts();
-    if (document.getElementById('page-calendar') && document.getElementById('page-calendar').classList.contains('active')) {
-        renderCalendar();
-    }
-}
+// 前方宣言（関数は後で定義）
+let updateUI, updateSummary, displayTransactions, updateCharts, renderCalendar;
 
 // Firebaseにデータを保存
 function saveTransactions() {
@@ -359,8 +351,19 @@ function editTransaction(id) {
     document.getElementById('page-add').classList.add('active');
 }
 
+// UIを更新
+updateUI = function() {
+    if (!totalIncomeEl) return;
+    updateSummary();
+    displayTransactions();
+    updateCharts();
+    if (document.getElementById('page-calendar') && document.getElementById('page-calendar').classList.contains('active')) {
+        renderCalendar();
+    }
+};
+
 // サマリーを更新
-function updateSummary() {
+updateSummary = function() {
     const income = transactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
@@ -384,7 +387,7 @@ function updateSummary() {
 }
 
 // 取引を表示
-function displayTransactions() {
+displayTransactions = function() {
     // フィルター適用
     let filteredTransactions = transactions;
     if (currentFilter !== 'all') {
@@ -476,7 +479,7 @@ function showNotification(message) {
 }
 
 // グラフを更新
-function updateCharts() {
+updateCharts = function() {
     updateLineChart();
     updatePieChart();
     updateBalanceChart();
@@ -974,7 +977,7 @@ document.head.appendChild(style);
 }
 
 // カレンダーを描画
-function renderCalendar() {
+renderCalendar = function() {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     
