@@ -858,12 +858,12 @@ updatePieChart = function() {
 updateBalanceChart = function() {
     const ctx = document.getElementById('balanceChart');
     
-    // 過去30日のデータを準備
+    // 過去2週間のデータを準備
     const daysData = {};
     const today = new Date();
     
-    // 過去30日のラベルを作成
-    for (let i = 29; i >= 0; i--) {
+    // 過去2週間のラベルを作成
+    for (let i = 13; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         const key = `${date.getMonth() + 1}/${date.getDate()}`;
