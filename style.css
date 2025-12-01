@@ -13,6 +13,121 @@ body {
     margin: 0;
 }
 
+/* 認証画面 */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.auth-box {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    max-width: 450px;
+    width: 100%;
+}
+
+.auth-box h2 {
+    text-align: center;
+    color: #555;
+    margin-bottom: 30px;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.auth-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid #a1887f;
+    background: white;
+    color: #a1887f;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.auth-tab:hover {
+    background: #f0f0f0;
+}
+
+.auth-tab.active {
+    background: #a1887f;
+    color: white;
+}
+
+.auth-form {
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+.btn-auth {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #a1887f 0%, #8d6e63 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+    margin-top: 10px;
+}
+
+.btn-auth:hover {
+    transform: translateY(-2px);
+}
+
+.auth-error {
+    color: #e57373;
+    font-size: 0.9em;
+    margin-top: 10px;
+    text-align: center;
+    min-height: 20px;
+}
+
+/* アプリヘッダー */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.app-header h1 {
+    margin: 0;
+}
+
+.btn-logout {
+    padding: 10px 20px;
+    background: #e57373;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-logout:hover {
+    background: #ef5350;
+    transform: translateY(-2px);
+}
+
 .container {
     max-width: 900px;
     margin: 0 auto;

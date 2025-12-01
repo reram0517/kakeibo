@@ -1,27 +1,183 @@
-// ローカルストレージからデータを取得
-let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+// Firebase設定
+const firebaseConfig = {
+    apiKey: "AIzaSyAF2wQbwCrnSJMWrRRZC_XkjinzNHl3rPw",
+    authDomain: "kakeibo-app-1201.firebaseapp.com",
+    databaseURL: "https://kakeibo-app-1201-default-rtdb.firebaseio.com",
+    projectId: "kakeibo-app-1201",
+    storageBucket: "kakeibo-app-1201.firebasestorage.app",
+    messagingSenderId: "809121724984",
+    appId: "1:809121724984:web:37f8c5f53b5f401b6484cd"
+};
 
-// DOM要素の取得
-const form = document.getElementById('transaction-form');
-const transactionList = document.getElementById('transaction-list');
-const totalIncomeEl = document.getElementById('total-income');
-const totalExpenseEl = document.getElementById('total-expense');
-const balanceEl = document.getElementById('balance');
-const filterButtons = document.querySelectorAll('.filter-btn');
-const navButtons = document.querySelectorAll('.nav-btn');
-const pageContents = document.querySelectorAll('.page-content');
+// Firebase初期化
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const database = firebase.database();
+
+let currentUser = null;
+let transactions = [];
+
+// DOM要素の取得（ページ読み込み後に実行）
+let form, transactionList, totalIncomeEl, totalExpenseEl, balanceEl;
+let filterButtons, navButtons, pageContents;
 
 let currentFilter = 'all';
 let lineChart = null;
 let pieChart = null;
 let balanceChart = null;
-let currentChartView = 'daily'; // 'daily' または 'monthly'
+let currentChartView = 'daily';
 let currentMonth = new Date();
 let selectedDate = new Date();
-let currentWeekOffset = 0; // 0が今週、1が先週、-1が来週
+let currentWeekOffset = 0;
 
-// 今日の日付をデフォルトにセット
-document.getElementById('date').valueAsDate = new Date();
+// 認証状態の監視
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        showMainApp();
+        loadUserData();
+    } else {
+        currentUser = null;
+        showAuthScreen();
+    }
+});
+
+// 画面表示切り替え
+function showAuthScreen() {
+    document.getElementById('auth-container').style.display = 'flex';
+    document.getElementById('main-app').style.display = 'none';
+}
+
+function showMainApp() {
+    document.getElementById('auth-container').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    
+    // DOM要素を取得（初回のみ）
+    if (!form) {
+        form = document.getElementById('transaction-form');
+        transactionList = document.getElementById('transaction-list');
+        totalIncomeEl = document.getElementById('total-income');
+        totalExpenseEl = document.getElementById('total-expense');
+        balanceEl = document.getElementById('balance');
+        filterButtons = document.querySelectorAll('.filter-btn');
+        navButtons = document.querySelectorAll('.nav-btn');
+        pageContents = document.querySelectorAll('.page-content');
+        
+        // 今日の日付をデフォルトにセット
+        document.getElementById('date').valueAsDate = new Date();
+        
+        // イベントリスナーを設定
+        initializeEventListeners();
+    }
+}
+
+// Firebaseからユーザーデータを読み込む
+function loadUserData() {
+    if (!currentUser) return;
+    
+    const userRef = database.ref('users/' + currentUser.uid + '/transactions');
+    userRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        transactions = data ? Object.values(data) : [];
+        updateUI();
+    });
+}
+
+// Firebaseにデータを保存
+function saveTransactions() {
+    if (!currentUser) return;
+    
+    const userRef = database.ref('users/' + currentUser.uid + '/transactions');
+    const transactionsObj = {};
+    transactions.forEach(t => {
+        transactionsObj[t.id] = t;
+    });
+    userRef.set(transactionsObj);
+}
+
+// 認証タブの切り替え
+document.addEventListener('DOMContentLoaded', () => {
+    const authTabs = document.querySelectorAll('.auth-tab');
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    
+    authTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            authTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            if (tab.dataset.tab === 'login') {
+                loginForm.classList.add('active');
+                signupForm.classList.remove('active');
+            } else {
+                signupForm.classList.add('active');
+                loginForm.classList.remove('active');
+            }
+        });
+    });
+    
+    // ログインフォーム
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        const errorEl = document.getElementById('login-error');
+        
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+            errorEl.textContent = '';
+        } catch (error) {
+            errorEl.textContent = getErrorMessage(error.code);
+        }
+    });
+    
+    // 新規登録フォーム
+    signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+        const confirmPassword = document.getElementById('signup-password-confirm').value;
+        const errorEl = document.getElementById('signup-error');
+        
+        if (password !== confirmPassword) {
+            errorEl.textContent = 'パスワードが一致しません';
+            return;
+        }
+        
+        try {
+            await auth.createUserWithEmailAndPassword(email, password);
+            errorEl.textContent = '';
+        } catch (error) {
+            errorEl.textContent = getErrorMessage(error.code);
+        }
+    });
+    
+    // ログアウトボタン
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        auth.signOut();
+    });
+});
+
+// エラーメッセージの日本語化
+function getErrorMessage(errorCode) {
+    switch (errorCode) {
+        case 'auth/email-already-in-use':
+            return 'このメールアドレスは既に使用されています';
+        case 'auth/invalid-email':
+            return 'メールアドレスの形式が正しくありません';
+        case 'auth/weak-password':
+            return 'パスワードは6文字以上で設定してください';
+        case 'auth/user-not-found':
+            return 'ユーザーが見つかりません';
+        case 'auth/wrong-password':
+            return 'パスワードが正しくありません';
+        default:
+            return 'エラーが発生しました: ' + errorCode;
+    }
+}
+
+// イベントリスナーの初期化
+function initializeEventListeners() {
 
 // カレンダーのナビゲーション
 document.getElementById('prev-month').addEventListener('click', () => {
@@ -808,8 +964,10 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// 初期表示
-updateUI();
+    // 初回のUI更新とカレンダー描画
+    updateUI();
+    renderCalendar();
+}
 
 // カレンダーを描画
 function renderCalendar() {

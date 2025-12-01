@@ -6,10 +6,61 @@
     <title>家計簿アプリ</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>💰 家計簿アプリ</h1>
+    <!-- ログイン画面 -->
+    <div class="auth-container" id="auth-container">
+        <div class="auth-box">
+            <h2>💰 家計簿アプリ</h2>
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">ログイン</button>
+                <button class="auth-tab" data-tab="signup">新規登録</button>
+            </div>
+            
+            <!-- ログインフォーム -->
+            <form id="login-form" class="auth-form active">
+                <div class="form-group">
+                    <label for="login-email">メールアドレス</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">パスワード</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <button type="submit" class="btn-auth">ログイン</button>
+                <p class="auth-error" id="login-error"></p>
+            </form>
+            
+            <!-- 新規登録フォーム -->
+            <form id="signup-form" class="auth-form">
+                <div class="form-group">
+                    <label for="signup-email">メールアドレス</label>
+                    <input type="email" id="signup-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">パスワード（6文字以上）</label>
+                    <input type="password" id="signup-password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="signup-password-confirm">パスワード確認</label>
+                    <input type="password" id="signup-password-confirm" required minlength="6">
+                </div>
+                <button type="submit" class="btn-auth">新規登録</button>
+                <p class="auth-error" id="signup-error"></p>
+            </form>
+        </div>
+    </div>
+    
+    <!-- メインアプリ -->
+    <div class="container" id="main-app" style="display: none;">
+        <div class="app-header">
+            <h1>💰 家計簿アプリ</h1>
+            <button class="btn-logout" id="logout-btn">ログアウト</button>
+        </div>
         
         <!-- ホーム画面 -->
         <div class="page-content active" id="page-home">
