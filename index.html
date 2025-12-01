@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家計簿アプリ</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 家計簿アプリ</h1>
+        
+        <!-- ホーム画面 -->
+        <div class="page-content active" id="page-home">
+            <!-- 収支サマリー -->
+            <div class="summary">
+                <div class="summary-item income-summary">
+                    <h3>収入</h3>
+                    <p class="amount" id="total-income">¥0</p>
+                </div>
+                <div class="summary-item expense-summary">
+                    <h3>支出</h3>
+                    <p class="amount" id="total-expense">¥0</p>
+                </div>
+                <div class="summary-item balance-summary">
+                    <h3>残高</h3>
+                    <p class="amount" id="balance">¥0</p>
+                </div>
+            </div>
+
+            <!-- 取引履歴 -->
+            <div class="history-section">
+                <h2>取引履歴</h2>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">すべて</button>
+                    <button class="filter-btn" data-filter="income">収入</button>
+                    <button class="filter-btn" data-filter="expense">支出</button>
+                </div>
+                <ul id="transaction-list"></ul>
+            </div>
+        </div>
+        
+        <!-- 入力フォーム画面 -->
+        <div class="page-content" id="page-add">
+            <div class="input-section">
+                <h2>取引を追加</h2>
+                <form id="transaction-form">
+                    <div class="form-group">
+                        <label for="description">説明</label>
+                        <input type="text" id="description" placeholder="例: 給料、食費など">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">金額</label>
+                        <input type="number" id="amount" placeholder="金額を入力" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="type">種類</label>
+                        <select id="type" required>
+                            <option value="income">収入</option>
+                            <option value="expense">支出</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">カテゴリ</label>
+                        <select id="category" required>
+                            <option value="給料">給料</option>
+                            <option value="食費">食費</option>
+                            <option value="交通費">交通費</option>
+                            <option value="娯楽">娯楽</option>
+                            <option value="光熱費">光熱費</option>
+                            <option value="貯金">貯金</option>
+                            <option value="その他">その他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date">日付</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-add">追加</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- カレンダー画面 -->
+        <div class="page-content" id="page-calendar">
+            <div class="calendar-section">
+                <h2>📅 カレンダー</h2>
+                <div class="calendar-controls">
+                    <button class="calendar-nav-btn" id="prev-month">◀</button>
+                    <h3 id="calendar-month">2025年12月</h3>
+                    <button class="calendar-nav-btn" id="next-month">▶</button>
+                </div>
+                <div class="calendar-grid" id="calendar-grid"></div>
+                
+                <!-- 選択日の取引 -->
+                <div class="selected-day-transactions">
+                    <h3 id="selected-day-title">今日の取引</h3>
+                    <ul id="day-transaction-list"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- グラフ画面 -->
+        <div class="page-content" id="page-charts">
+            <div class="charts-section">
+                <h2>📈 グラフ</h2>
+                <div class="chart-tabs">
+                    <button class="tab-btn active" data-tab="daily">日別</button>
+                    <button class="tab-btn" data-tab="monthly">月別</button>
+                </div>
+                <div class="charts-container">
+                    <div class="chart-box chart-large">
+                        <div class="week-navigation">
+                            <button class="week-nav-btn" id="prev-week">◀ 前の週</button>
+                            <h3 id="chart-title">日別収支推移</h3>
+                            <button class="week-nav-btn" id="next-week">次の週 ▶</button>
+                        </div>
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>カテゴリ別支出</h3>
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                    <div class="chart-box chart-large">
+                        <h3>残高推移（過去30日）</h3>
+                        <canvas id="balanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 下部ナビゲーションタブ -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" data-page="home">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">ホーム</span>
+        </button>
+        <button class="nav-btn" data-page="add">
+            <span class="nav-icon">➕</span>
+            <span class="nav-label">入力</span>
+        </button>
+        <button class="nav-btn" data-page="calendar">
+            <span class="nav-icon">📅</span>
+            <span class="nav-label">カレンダー</span>
+        </button>
+        <button class="nav-btn" data-page="charts">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">グラフ</span>
+        </button>
+    </nav>
+
+    <script src="script.js"></script>
+</body>
+</html>
