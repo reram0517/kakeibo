@@ -597,6 +597,32 @@ h2 {
     #calendar-month {
         font-size: 1.1em;
     }
+
+    .day-summary {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .day-summary-item {
+        padding: 3px;
+    }
+
+    .day-summary-label {
+        font-size: 0.75em;
+    }
+
+    .day-summary-value {
+        font-size: 0.95em;
+    }
+
+    .selected-day-transactions {
+        padding: 15px;
+    }
+
+    .selected-day-transactions h3 {
+        font-size: 1.1em;
+    }
 }
 
 /* ページコンテンツの表示切り替え */
@@ -788,32 +814,33 @@ h2 {
 }
 
 .day-summary {
-    display: flex;
-    gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
     margin-bottom: 20px;
     background: white;
     padding: 15px;
     border-radius: 10px;
-    flex-wrap: wrap;
 }
 
 .day-summary-item {
-    flex: 1;
-    min-width: 100px;
     text-align: center;
+    padding: 5px;
 }
 
 .day-summary-label {
     display: block;
-    font-size: 0.9em;
+    font-size: 0.85em;
     color: #666;
     margin-bottom: 5px;
+    white-space: nowrap;
 }
 
 .day-summary-value {
     display: block;
-    font-size: 1.2em;
+    font-size: 1.1em;
     font-weight: bold;
+    word-break: break-all;
 }
 
 .day-summary-value.income-text {
