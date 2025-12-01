@@ -79,7 +79,9 @@ function loadUserData() {
     userRef.on('value', (snapshot) => {
         const data = snapshot.val();
         transactions = data ? Object.values(data) : [];
-        updateUI();
+        if (typeof updateUI === 'function') {
+            updateUI();
+        }
     });
 }
 
@@ -338,11 +340,6 @@ function editTransaction(id) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
     document.querySelector('[data-page="add"]').classList.add('active');
     document.getElementById('page-add').classList.add('active');
-}
-
-// ローカルストレージに保存
-function saveTransactions() {
-    localStorage.setItem('transactions', JSON.stringify(transactions));
 }
 
 // UIを更新
