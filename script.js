@@ -91,6 +91,17 @@ function loadUserData() {
     });
 }
 
+// UIを更新（早期定義）
+function updateUI() {
+    if (!totalIncomeEl) return; // DOM要素がまだない場合は何もしない
+    updateSummary();
+    displayTransactions();
+    updateCharts();
+    if (document.getElementById('page-calendar') && document.getElementById('page-calendar').classList.contains('active')) {
+        renderCalendar();
+    }
+}
+
 // Firebaseにデータを保存
 function saveTransactions() {
     if (!currentUser) return;
@@ -346,16 +357,6 @@ function editTransaction(id) {
     document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
     document.querySelector('[data-page="add"]').classList.add('active');
     document.getElementById('page-add').classList.add('active');
-}
-
-// UIを更新
-function updateUI() {
-    updateSummary();
-    displayTransactions();
-    updateCharts();
-    if (document.getElementById('page-calendar').classList.contains('active')) {
-        renderCalendar();
-    }
 }
 
 // サマリーを更新
