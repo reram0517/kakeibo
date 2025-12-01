@@ -30,17 +30,12 @@ let currentMonth = new Date();
 let selectedDate = new Date();
 let currentWeekOffset = 0;
 
-// 認証状態の監視
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        currentUser = user;
-        showMainApp();
-        loadUserData();
-    } else {
-        currentUser = null;
-        showAuthScreen();
-    }
-});
+// 前方宣言（関数は後で定義）
+let updateUI, updateSummary, displayTransactions, updateCharts, renderCalendar;
+let formatCurrency, editTransaction, deleteTransaction, updateLineChart, updatePieChart, updateBalanceChart;
+let createCalendarDay, displayDayTransactions;
+let showAuthScreen, showMainApp, loadUserData, saveTransactions, getErrorMessage, initializeEventListeners;
+let formatDate, showNotification;
 
 // 画面表示切り替え
 showAuthScreen = function() {
@@ -90,13 +85,6 @@ loadUserData = function() {
         checkAndUpdate();
     });
 }
-
-// 前方宣言（関数は後で定義）
-let updateUI, updateSummary, displayTransactions, updateCharts, renderCalendar;
-let formatCurrency, editTransaction, deleteTransaction, updateLineChart, updatePieChart, updateBalanceChart;
-let createCalendarDay, displayDayTransactions;
-let showAuthScreen, showMainApp, loadUserData, saveTransactions, getErrorMessage, initializeEventListeners;
-let formatDate, showNotification;
 
 // Firebaseにデータを保存
 saveTransactions = function() {
@@ -190,6 +178,18 @@ getErrorMessage = function(errorCode) {
             return 'エラーが発生しました: ' + errorCode;
     }
 }
+
+// 認証状態の監視（関数定義後に実行）
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        currentUser = user;
+        showMainApp();
+        loadUserData();
+    } else {
+        currentUser = null;
+        showAuthScreen();
+    }
+});
 
 // イベントリスナーの初期化
 initializeEventListeners = function() {
