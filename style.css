@@ -614,7 +614,7 @@ h2 {
     }
 
     .day-summary-value {
-        font-size: 0.85em;
+        font-size: 0.75em;
     }
 
     .selected-day-transactions {
@@ -839,11 +839,10 @@ h2 {
 
 .day-summary-value {
     display: block;
-    font-size: 1.1em;
+    font-size: 0.95em;
     font-weight: bold;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-wrap: break-word;
+    line-height: 1.2;
 }
 
 .day-summary-value.income-text {
