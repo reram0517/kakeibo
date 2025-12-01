@@ -43,12 +43,12 @@ auth.onAuthStateChanged((user) => {
 });
 
 // 画面表示切り替え
-function showAuthScreen() {
+showAuthScreen = function() {
     document.getElementById('auth-container').style.display = 'flex';
     document.getElementById('main-app').style.display = 'none';
 }
 
-function showMainApp() {
+showMainApp = function() {
     document.getElementById('auth-container').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
     
@@ -72,7 +72,7 @@ function showMainApp() {
 }
 
 // Firebaseからユーザーデータを読み込む
-function loadUserData() {
+loadUserData = function() {
     if (!currentUser) return;
     
     const userRef = database.ref('users/' + currentUser.uid + '/transactions');
@@ -93,9 +93,13 @@ function loadUserData() {
 
 // 前方宣言（関数は後で定義）
 let updateUI, updateSummary, displayTransactions, updateCharts, renderCalendar;
+let formatCurrency, editTransaction, deleteTransaction, updateLineChart, updatePieChart, updateBalanceChart;
+let createCalendarDay, displayDayTransactions;
+let showAuthScreen, showMainApp, loadUserData, saveTransactions, getErrorMessage, initializeEventListeners;
+let formatDate, showNotification;
 
 // Firebaseにデータを保存
-function saveTransactions() {
+saveTransactions = function() {
     if (!currentUser) return;
     
     const userRef = database.ref('users/' + currentUser.uid + '/transactions');
@@ -170,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // エラーメッセージの日本語化
-function getErrorMessage(errorCode) {
+getErrorMessage = function(errorCode) {
     switch (errorCode) {
         case 'auth/email-already-in-use':
             return 'このメールアドレスは既に使用されています';
@@ -188,7 +192,7 @@ function getErrorMessage(errorCode) {
 }
 
 // イベントリスナーの初期化
-function initializeEventListeners() {
+initializeEventListeners = function() {
 
 // カレンダーのナビゲーション
 document.getElementById('prev-month').addEventListener('click', () => {
@@ -319,7 +323,7 @@ tabButtons.forEach(btn => {
 });
 
 // 取引を削除
-function deleteTransaction(id) {
+deleteTransaction = function(id) {
     if (confirm('本当に削除しますか？')) {
         transactions = transactions.filter(t => t.id !== id);
         saveTransactions();
@@ -329,7 +333,7 @@ function deleteTransaction(id) {
 }
 
 // 取引を編集
-function editTransaction(id) {
+editTransaction = function(id) {
     const transaction = transactions.find(t => t.id === id);
     if (!transaction) return;
     
@@ -436,7 +440,7 @@ displayTransactions = function() {
 }
 
 // 通貨フォーマット
-function formatCurrency(amount) {
+formatCurrency = function(amount) {
     return new Intl.NumberFormat('ja-JP', {
         style: 'currency',
         currency: 'JPY'
@@ -444,7 +448,7 @@ function formatCurrency(amount) {
 }
 
 // 日付フォーマット
-function formatDate(dateString) {
+formatDate = function(dateString) {
     const date = new Date(dateString);
     const year = date.getFullYear();
     const month = date.getMonth() + 1;
@@ -453,7 +457,7 @@ function formatDate(dateString) {
 }
 
 // 通知を表示
-function showNotification(message) {
+showNotification = function(message) {
     // シンプルなアラート（後でよりスタイリッシュな通知に変更可能）
     const notification = document.createElement('div');
     notification.textContent = message;
@@ -486,7 +490,7 @@ updateCharts = function() {
 }
 
 // 月別収支推移グラフ
-function updateLineChart() {
+updateLineChart = function() {
     const ctx = document.getElementById('lineChart');
     const chartTitle = document.getElementById('chart-title');
     
@@ -504,7 +508,7 @@ function updateLineChart() {
 }
 
 // 日別グラフ
-function updateDailyLineChart(ctx) {
+const updateDailyLineChart = function(ctx) {
     const labels = [];
     const incomeData = [];
     const expenseData = [];
@@ -631,7 +635,7 @@ function updateDailyLineChart(ctx) {
 }
 
 // 月別グラフ
-function updateMonthlyLineChart(ctx) {
+const updateMonthlyLineChart = function(ctx) {
     // 過去6ヶ月のデータを準備
     const monthsData = {};
     const today = new Date();
@@ -751,7 +755,7 @@ function updateMonthlyLineChart(ctx) {
 }
 
 // カテゴリ別支出円グラフ
-function updatePieChart() {
+updatePieChart = function() {
     const ctx = document.getElementById('pieChart');
     
     // カテゴリ別に支出を集計
@@ -851,7 +855,7 @@ function updatePieChart() {
 }
 
 // 残高推移グラフ
-function updateBalanceChart() {
+updateBalanceChart = function() {
     const ctx = document.getElementById('balanceChart');
     
     // 過去30日のデータを準備
@@ -1030,7 +1034,7 @@ renderCalendar = function() {
 }
 
 // カレンダーの日付セルを作成
-function createCalendarDay(day, year, month, isOtherMonth) {
+createCalendarDay = function(day, year, month, isOtherMonth) {
     const dayEl = document.createElement('div');
     dayEl.className = 'calendar-day';
     if (isOtherMonth) dayEl.classList.add('other-month');
@@ -1081,7 +1085,7 @@ function createCalendarDay(day, year, month, isOtherMonth) {
 }
 
 // 選択日の取引を表示
-function displayDayTransactions(date) {
+displayDayTransactions = function(date) {
     const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const dayTransactions = transactions.filter(t => t.date === dateString);
     
