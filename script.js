@@ -25,14 +25,17 @@ let currentFilter = 'all';
 let lineChart = null;
 let pieChart = null;
 let balanceChart = null;
+let monthlyExpenseChart = null;
 let currentChartView = 'daily';
 let currentMonth = new Date();
 let selectedDate = new Date();
 let currentWeekOffset = 0;
+let currentMonthOffset = 0;
+let currentPieChartPeriod = 'total';
 
 // 前方宣言（関数は後で定義）
 let updateUI, updateSummary, displayTransactions, updateCharts, renderCalendar;
-let formatCurrency, editTransaction, deleteTransaction, updateLineChart, updatePieChart, updateBalanceChart;
+let formatCurrency, editTransaction, deleteTransaction, updateLineChart, updatePieChart, updateBalanceChart, updateMonthlyExpenseChart;
 let createCalendarDay, displayDayTransactions;
 let showAuthScreen, showMainApp, loadUserData, saveTransactions, getErrorMessage, initializeEventListeners;
 let formatDate, showNotification;
@@ -242,12 +245,20 @@ document.getElementById('next-month').addEventListener('click', () => {
 
 // 週のナビゲーション
 document.getElementById('prev-week').addEventListener('click', () => {
-    currentWeekOffset++;
+    if (currentChartView === 'daily') {
+        currentWeekOffset++;
+    } else {
+        currentMonthOffset++;
+    }
     updateLineChart();
 });
 
 document.getElementById('next-week').addEventListener('click', () => {
-    currentWeekOffset--;
+    if (currentChartView === 'daily') {
+        currentWeekOffset--;
+    } else {
+        currentMonthOffset--;
+    }
     updateLineChart();
 });
 
@@ -384,6 +395,17 @@ tabButtons.forEach(btn => {
         btn.classList.add('active');
         currentChartView = btn.dataset.tab;
         updateLineChart();
+    });
+});
+
+// 円グラフタブのイベント
+const pieChartTabButtons = document.querySelectorAll('.pie-chart-tab-btn');
+pieChartTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        pieChartTabButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentPieChartPeriod = btn.dataset.period;
+        updatePieChart();
     });
 });
 
@@ -812,12 +834,16 @@ updateCharts = function() {
     updateLineChart();
     updatePieChart();
     updateBalanceChart();
+    updateMonthlyExpenseChart();
+    updateMonthExpenseComparison();
 }
 
 // 月別収支推移グラフ
 updateLineChart = function() {
     const ctx = document.getElementById('lineChart');
     const chartTitle = document.getElementById('chart-title');
+    const prevBtn = document.getElementById('prev-week');
+    const nextBtn = document.getElementById('next-week');
     
     if (currentChartView === 'daily') {
         const weekText = currentWeekOffset === 0 ? '今週' : 
@@ -825,9 +851,22 @@ updateLineChart = function() {
                         currentWeekOffset > 1 ? `${currentWeekOffset}週間前` :
                         `${Math.abs(currentWeekOffset)}週間後`;
         chartTitle.textContent = `日別収支推移（${weekText}）`;
+        
+        // ボタンのテキストを週単位に変更
+        if (prevBtn) prevBtn.textContent = '◀ 前の週';
+        if (nextBtn) nextBtn.textContent = '次の週 ▶';
+        
         updateDailyLineChart(ctx);
     } else {
-        chartTitle.textContent = '月別収支推移（過去6ヶ月）';
+        const monthText = currentMonthOffset === 0 ? '今月中心の6ヶ月' : 
+                         currentMonthOffset > 0 ? `${currentMonthOffset}ヶ月前中心の6ヶ月` :
+                         `${Math.abs(currentMonthOffset)}ヶ月後中心の6ヶ月`;
+        chartTitle.textContent = `月別収支推移（${monthText}）`;
+        
+        // ボタンのテキストを月単位に変更
+        if (prevBtn) prevBtn.textContent = '◀ 前の月';
+        if (nextBtn) nextBtn.textContent = '次の月 ▶';
+        
         updateMonthlyLineChart(ctx);
     }
 }
@@ -961,13 +1000,14 @@ const updateDailyLineChart = function(ctx) {
 
 // 月別グラフ
 const updateMonthlyLineChart = function(ctx) {
-    // 過去6ヶ月のデータを準備
+    // 過去6ヶ月のデータを準備（今月を5番目に表示）
     const monthsData = {};
     const today = new Date();
     
-    // 過去6ヶ月のラベルを作成
-    for (let i = 5; i >= 0; i--) {
-        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    // currentMonthOffsetに基づいて6ヶ月のラベルを作成
+    // 今月が5番目になるように、4ヶ月前から1ヶ月後まで表示
+    for (let i = 3; i >= -2; i--) {
+        const date = new Date(today.getFullYear(), today.getMonth() - currentMonthOffset - i, 1);
         const key = `${date.getFullYear()}/${date.getMonth() + 1}`;
         monthsData[key] = { income: 0, expense: 0 };
     }
@@ -1083,9 +1123,19 @@ const updateMonthlyLineChart = function(ctx) {
 updatePieChart = function() {
     const ctx = document.getElementById('pieChart');
     
+    // 今月のデータでフィルタリングする場合の月文字列を取得
+    let filteredTransactions = transactions;
+    if (currentPieChartPeriod === 'monthly') {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const monthString = `${year}-${String(month + 1).padStart(2, '0')}`;
+        filteredTransactions = transactions.filter(t => t.date.startsWith(monthString));
+    }
+    
     // カテゴリ別に支出を集計
     const categoryData = {};
-    transactions.forEach(t => {
+    filteredTransactions.forEach(t => {
         if (t.type === 'expense') {
             if (!categoryData[t.category]) {
                 categoryData[t.category] = 0;
@@ -1094,8 +1144,10 @@ updatePieChart = function() {
         }
     });
     
-    const labels = Object.keys(categoryData);
-    const data = Object.values(categoryData);
+    // 金額の大きい順にソート
+    const sortedEntries = Object.entries(categoryData).sort((a, b) => b[1] - a[1]);
+    const labels = sortedEntries.map(entry => entry[0]);
+    const data = sortedEntries.map(entry => entry[1]);
     
     // パステルカラーパレット
     const colors = [
@@ -1273,6 +1325,146 @@ updateBalanceChart = function() {
     });
 }
 
+// 月別支出推移グラフ
+updateMonthlyExpenseChart = function() {
+    const ctx = document.getElementById('monthlyExpenseChart');
+    
+    // 過去6ヶ月のデータを準備
+    const monthsData = {};
+    const today = new Date();
+    
+    // 過去6ヶ月のラベルを作成
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const key = `${date.getMonth() + 1}月`;
+        const fullKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthsData[key] = { fullKey: fullKey, expense: 0 };
+    }
+    
+    // 取引データを集計
+    transactions.forEach(t => {
+        if (t.type === 'expense') {
+            Object.keys(monthsData).forEach(k => {
+                if (t.date.startsWith(monthsData[k].fullKey)) {
+                    monthsData[k].expense += t.amount;
+                }
+            });
+        }
+    });
+    
+    const labels = Object.keys(monthsData);
+    const expenseData = Object.values(monthsData).map(d => d.expense);
+    
+    // 既存のグラフを破棄
+    if (monthlyExpenseChart) {
+        monthlyExpenseChart.destroy();
+    }
+    
+    // 新しいグラフを作成
+    monthlyExpenseChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '支出',
+                    data: expenseData,
+                    backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                    borderColor: '#dc3545',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y;
+                            let label = `支出: ¥${value.toLocaleString()}`;
+                            
+                            // 前月比を計算
+                            if (context.dataIndex > 0) {
+                                const prevValue = context.dataset.data[context.dataIndex - 1];
+                                if (prevValue > 0) {
+                                    const diff = value - prevValue;
+                                    const diffPercent = ((diff / prevValue) * 100).toFixed(1);
+                                    const sign = diff >= 0 ? '+' : '';
+                                    label += `\n前月比: ${sign}¥${diff.toLocaleString()} (${sign}${diffPercent}%)`;
+                                }
+                            }
+                            
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '¥' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 今月と先月の支出比較を表示
+updateMonthExpenseComparison = function() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    
+    // 今月の支出合計を計算
+    const currentMonthString = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const currentMonthExpense = transactions
+        .filter(t => t.date.startsWith(currentMonthString) && t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    // 先月の支出合計を計算
+    const prevMonthDate = new Date(year, month - 1, 1);
+    const prevMonthString = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+    const prevMonthExpense = transactions
+        .filter(t => t.date.startsWith(prevMonthString) && t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    // 今月の支出を表示
+    const currentMonthEl = document.getElementById('current-month-expense');
+    if (currentMonthEl) {
+        currentMonthEl.textContent = `¥${currentMonthExpense.toLocaleString()}`;
+    }
+    
+    // 先月比を表示
+    const comparisonEl = document.getElementById('month-comparison');
+    if (comparisonEl && prevMonthExpense > 0) {
+        const diff = currentMonthExpense - prevMonthExpense;
+        const diffPercent = ((diff / prevMonthExpense) * 100).toFixed(1);
+        const sign = diff >= 0 ? '+' : '';
+        
+        comparisonEl.textContent = `${sign}¥${diff.toLocaleString()} (${sign}${diffPercent}%)`;
+        comparisonEl.className = 'summary-value';
+        
+        if (diff >= 0) {
+            comparisonEl.classList.add('positive');
+        } else {
+            comparisonEl.classList.add('negative');
+        }
+    } else if (comparisonEl) {
+        comparisonEl.textContent = '-';
+        comparisonEl.className = 'summary-value';
+    }
+}
+
 // アニメーション用CSS
 const style = document.createElement('style');
 style.textContent = `
@@ -1312,6 +1504,18 @@ renderCalendar = function() {
     
     // 月の表示を更新
     document.getElementById('calendar-month').textContent = `${year}年${month + 1}月`;
+    
+    // 月の支出合計を計算
+    const monthString = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const monthlyExpense = transactions
+        .filter(t => t.date.startsWith(monthString) && t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    // 月の支出を表示
+    const monthExpenseEl = document.getElementById('month-total-expense');
+    if (monthExpenseEl) {
+        monthExpenseEl.textContent = `月の支出: ¥${monthlyExpense.toLocaleString()}`;
+    }
     
     const calendarGrid = document.getElementById('calendar-grid');
     calendarGrid.innerHTML = '';

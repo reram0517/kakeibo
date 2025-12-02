@@ -393,52 +393,111 @@ h2 {
     margin-bottom: 30px;
 }
 
+.month-expense-summary {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    background: linear-gradient(135deg, #fff9e6 0%, #ffeaa7 100%);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.expense-summary-item {
+    text-align: center;
+    flex: 1;
+}
+
+.expense-summary-item .summary-label {
+    display: block;
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 8px;
+}
+
+.expense-summary-item .summary-value {
+    display: block;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+}
+
+.expense-summary-item .summary-value.positive {
+    color: #dc3545;
+}
+
+.expense-summary-item .summary-value.negative {
+    color: #28a745;
+}
+
 .chart-tabs {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
 }
 
+.pie-chart-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 15px 0;
+    justify-content: center;
+}
+
+.pie-chart-tab-btn {
+    padding: 10px 25px;
+    border: 2px solid #a1887f;
+    background: white;
+    color: #a1887f;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.pie-chart-tab-btn:hover {
+    background: #f0f0f0;
+}
+
+.pie-chart-tab-btn.active {
+    background: #a1887f;
+    color: white;
+}
+
+.line-chart-header {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.line-chart-header .chart-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    justify-content: center;
+}
+
 .week-navigation {
     display: flex;
     flex-direction: column;
-    margin-bottom: 15px;
     gap: 10px;
+    align-items: center;
 }
 
 .week-navigation h3 {
-    order: -1;
     text-align: center;
     margin: 0;
 }
 
-.week-navigation .week-nav-btn {
-    flex: 1;
-}
-
-.week-navigation {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    grid-template-rows: auto auto;
+.week-navigation .nav-buttons {
+    display: flex;
     gap: 10px;
-    margin-bottom: 15px;
+    width: 100%;
 }
 
-.week-navigation h3 {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    text-align: center;
-    margin: 0;
-}
-
-.week-navigation #prev-week {
-    grid-column: 1;
-    grid-row: 2;
-}
-
+.week-navigation #prev-week,
 .week-navigation #next-week {
-    grid-column: 3;
-    grid-row: 2;
+    flex: 1;
 }
 
 .week-nav-btn {
@@ -751,10 +810,22 @@ h2 {
     transform: scale(1.1);
 }
 
+.calendar-month-info {
+    text-align: center;
+    flex: 1;
+}
+
 #calendar-month {
     color: #333;
     font-size: 1.3em;
     margin: 0;
+}
+
+.month-total-expense {
+    margin: 5px 0 0 0;
+    font-size: 1em;
+    color: #dc3545;
+    font-weight: bold;
 }
 
 .calendar-grid {

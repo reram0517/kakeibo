@@ -146,7 +146,10 @@
                 <h2>📅 カレンダー</h2>
                 <div class="calendar-controls">
                     <button class="calendar-nav-btn" id="prev-month">◀</button>
-                    <h3 id="calendar-month">2025年12月</h3>
+                    <div class="calendar-month-info">
+                        <h3 id="calendar-month">2025年12月</h3>
+                        <p class="month-total-expense" id="month-total-expense">月の支出: ¥0</p>
+                    </div>
                     <button class="calendar-nav-btn" id="next-month">▶</button>
                 </div>
                 <div class="calendar-grid" id="calendar-grid"></div>
@@ -180,22 +183,47 @@
         <div class="page-content" id="page-charts">
             <div class="charts-section">
                 <h2>📈 グラフ</h2>
-                <div class="chart-tabs">
-                    <button class="tab-btn active" data-tab="daily">日別</button>
-                    <button class="tab-btn" data-tab="monthly">月別</button>
+                
+                <!-- 今月の支出サマリー -->
+                <div class="month-expense-summary">
+                    <div class="expense-summary-item">
+                        <span class="summary-label">今月の支出:</span>
+                        <span class="summary-value" id="current-month-expense">¥0</span>
+                    </div>
+                    <div class="expense-summary-item">
+                        <span class="summary-label">先月比:</span>
+                        <span class="summary-value" id="month-comparison">-</span>
+                    </div>
                 </div>
+                
                 <div class="charts-container">
                     <div class="chart-box chart-large">
-                        <div class="week-navigation">
-                            <button class="week-nav-btn" id="prev-week">◀ 前の週</button>
-                            <h3 id="chart-title">日別収支推移</h3>
-                            <button class="week-nav-btn" id="next-week">次の週 ▶</button>
+                        <div class="line-chart-header">
+                            <div class="chart-tabs">
+                                <button class="tab-btn active" data-tab="daily">日別</button>
+                                <button class="tab-btn" data-tab="monthly">月別</button>
+                            </div>
+                            <div class="week-navigation">
+                                <h3 id="chart-title">日別収支推移</h3>
+                                <div class="nav-buttons">
+                                    <button class="week-nav-btn" id="prev-week">◀ 前の週</button>
+                                    <button class="week-nav-btn" id="next-week">次の週 ▶</button>
+                                </div>
+                            </div>
                         </div>
                         <canvas id="lineChart"></canvas>
                     </div>
                     <div class="chart-box">
                         <h3>カテゴリ別支出</h3>
+                        <div class="pie-chart-tabs">
+                            <button class="pie-chart-tab-btn active" data-period="total">総支出</button>
+                            <button class="pie-chart-tab-btn" data-period="monthly">今月</button>
+                        </div>
                         <canvas id="pieChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>月別支出推移（過去6ヶ月）</h3>
+                        <canvas id="monthlyExpenseChart"></canvas>
                     </div>
                     <div class="chart-box chart-large">
                         <h3>残高推移（過去2週間）</h3>
