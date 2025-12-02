@@ -677,7 +677,7 @@ h2 {
     right: 0;
     background: white;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     padding: 6px 0;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
     z-index: 1000;
@@ -919,4 +919,106 @@ h2 {
 
 #day-transaction-list .empty-message {
     padding: 20px;
+}
+
+/* 予算セクション */
+.budget-section {
+    padding: 20px 0;
+}
+
+.budget-settings, .budget-summary, .category-budgets {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+}
+
+.budget-settings h3, .budget-summary h3, .category-budgets h3 {
+    color: #555;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.btn-save-budget {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #a1887f 0%, #8d6e63 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s;
+}
+
+.btn-save-budget:hover {
+    transform: translateY(-2px);
+}
+
+.budget-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.budget-info span {
+    font-size: 0.95em;
+}
+
+.budget-info strong {
+    color: #667eea;
+    font-size: 1.1em;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 30px;
+    background: #f0f0f0;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+    transition: width 0.3s, background 0.3s;
+    border-radius: 15px;
+}
+
+.progress-fill.warning {
+    background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+}
+
+.progress-fill.danger {
+    background: linear-gradient(90deg, #dc3545 0%, #c82333 100%);
+}
+
+.progress-text {
+    text-align: center;
+    color: #666;
+    font-size: 0.9em;
+}
+
+#category-budget-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.category-budget-item {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.category-budget-item h4 {
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.category-budget-item .progress-bar {
+    height: 20px;
 }

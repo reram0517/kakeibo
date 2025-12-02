@@ -204,6 +204,45 @@
                 </div>
             </div>
         </div>
+
+        <!-- 予算画面 -->
+        <div class="page-content" id="page-budget">
+            <div class="budget-section">
+                <h2>💰 予算管理</h2>
+                
+                <!-- 月間予算設定 -->
+                <div class="budget-settings">
+                    <h3>月間予算設定</h3>
+                    <div class="form-group">
+                        <label for="monthly-budget">月間予算</label>
+                        <input type="number" id="monthly-budget" placeholder="予算を入力">
+                        <button class="btn-save-budget" id="save-budget">保存</button>
+                    </div>
+                </div>
+
+                <!-- 予算の使用状況 -->
+                <div class="budget-summary">
+                    <h3>今月の予算使用状況</h3>
+                    <div class="budget-progress">
+                        <div class="budget-info">
+                            <span>予算: <strong id="budget-amount">¥0</strong></span>
+                            <span>使用: <strong id="used-amount">¥0</strong></span>
+                            <span>残り: <strong id="remaining-amount">¥0</strong></span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <p class="progress-text" id="progress-text">予算の0%を使用中</p>
+                    </div>
+                </div>
+
+                <!-- カテゴリ別予算 -->
+                <div class="category-budgets">
+                    <h3>カテゴリ別使用状況</h3>
+                    <div id="category-budget-list"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 下部ナビゲーションタブ -->
@@ -215,6 +254,10 @@
         <button class="nav-btn" data-page="add">
             <span class="nav-icon">➕</span>
             <span class="nav-label">入力</span>
+        </button>
+        <button class="nav-btn" data-page="budget">
+            <span class="nav-icon">💰</span>
+            <span class="nav-label">予算</span>
         </button>
         <button class="nav-btn" data-page="calendar">
             <span class="nav-icon">📅</span>

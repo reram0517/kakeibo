@@ -36,6 +36,7 @@ let formatCurrency, editTransaction, deleteTransaction, updateLineChart, updateP
 let createCalendarDay, displayDayTransactions;
 let showAuthScreen, showMainApp, loadUserData, saveTransactions, getErrorMessage, initializeEventListeners;
 let formatDate, showNotification;
+let updateBudgetDisplay, loadBudget;
 
 // 画面表示切り替え
 showAuthScreen = function() {
@@ -63,6 +64,9 @@ showMainApp = function() {
         
         // イベントリスナーを設定
         initializeEventListeners();
+        
+        // 予算データを読み込む
+        loadBudget();
     }
 }
 
@@ -363,6 +367,10 @@ updateUI = function() {
     updateCharts();
     if (document.getElementById('page-calendar') && document.getElementById('page-calendar').classList.contains('active')) {
         renderCalendar();
+    }
+    // 予算表示を更新
+    if (monthlyBudget > 0) {
+        updateBudgetDisplay();
     }
 };
 
@@ -1164,3 +1172,99 @@ displayDayTransactions = function(date) {
         list.appendChild(li);
     });
 }
+
+// 予算管理
+let monthlyBudget = 0;
+
+// 予算を保存
+document.getElementById('save-budget').addEventListener('click', () => {
+    const budgetInput = document.getElementById('monthly-budget');
+    const budget = parseInt(budgetInput.value) || 0;
+    
+    if (budget > 0) {
+        monthlyBudget = budget;
+        
+        // Firebaseに保存
+        if (currentUser) {
+            database.ref('users/' + currentUser.uid + '/budget').set({
+                monthly: monthlyBudget
+            });
+        }
+        
+        updateBudgetDisplay();
+        showNotification('予算を保存しました');
+    }
+});
+
+// 予算表示を更新
+const updateBudgetDisplay = function() {
+    // 今月の支出合計を計算
+    const today = new Date();
+    const thisMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    
+    let monthlyExpense = 0;
+    const categoryExpenses = {};
+    
+    transactions.forEach(t => {
+        if (t.date.startsWith(thisMonth) && t.type === 'expense') {
+            monthlyExpense += t.amount;
+            categoryExpenses[t.category] = (categoryExpenses[t.category] || 0) + t.amount;
+        }
+    });
+    
+    // 予算情報を更新
+    document.getElementById('budget-amount').textContent = `¥${monthlyBudget.toLocaleString()}`;
+    document.getElementById('used-amount').textContent = `¥${monthlyExpense.toLocaleString()}`;
+    document.getElementById('remaining-amount').textContent = `¥${(monthlyBudget - monthlyExpense).toLocaleString()}`;
+    
+    // プログレスバーを更新
+    const percentage = monthlyBudget > 0 ? (monthlyExpense / monthlyBudget) * 100 : 0;
+    const progressFill = document.getElementById('progress-fill');
+    const progressText = document.getElementById('progress-text');
+    
+    progressFill.style.width = `${Math.min(percentage, 100)}%`;
+    progressText.textContent = `予算の${percentage.toFixed(1)}%を使用中`;
+    
+    // 色を変更
+    progressFill.className = 'progress-fill';
+    if (percentage >= 100) {
+        progressFill.classList.add('danger');
+    } else if (percentage >= 80) {
+        progressFill.classList.add('warning');
+    }
+    
+    // カテゴリ別使用状況を表示
+    const categoryList = document.getElementById('category-budget-list');
+    categoryList.innerHTML = '';
+    
+    Object.keys(categoryExpenses).forEach(category => {
+        const amount = categoryExpenses[category];
+        const categoryPercentage = monthlyBudget > 0 ? (amount / monthlyBudget) * 100 : 0;
+        
+        const item = document.createElement('div');
+        item.className = 'category-budget-item';
+        item.innerHTML = `
+            <h4>${category}</h4>
+            <p>¥${amount.toLocaleString()} (${categoryPercentage.toFixed(1)}%)</p>
+            <div class="progress-bar">
+                <div class="progress-fill ${categoryPercentage >= 100 ? 'danger' : categoryPercentage >= 80 ? 'warning' : ''}" 
+                     style="width: ${Math.min(categoryPercentage, 100)}%"></div>
+            </div>
+        `;
+        categoryList.appendChild(item);
+    });
+};
+
+// 予算データを読み込む
+const loadBudget = function() {
+    if (!currentUser) return;
+    
+    database.ref('users/' + currentUser.uid + '/budget').once('value', (snapshot) => {
+        const budgetData = snapshot.val();
+        if (budgetData && budgetData.monthly) {
+            monthlyBudget = budgetData.monthly;
+            document.getElementById('monthly-budget').value = monthlyBudget;
+            updateBudgetDisplay();
+        }
+    });
+};
