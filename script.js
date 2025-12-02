@@ -1197,7 +1197,7 @@ document.getElementById('save-budget').addEventListener('click', () => {
 });
 
 // 予算表示を更新
-const updateBudgetDisplay = function() {
+updateBudgetDisplay = function() {
     // 今月の支出合計を計算
     const today = new Date();
     const thisMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
@@ -1256,7 +1256,7 @@ const updateBudgetDisplay = function() {
 };
 
 // 予算データを読み込む
-const loadBudget = function() {
+loadBudget = function() {
     if (!currentUser) return;
     
     database.ref('users/' + currentUser.uid + '/budget').once('value', (snapshot) => {
