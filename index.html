@@ -210,36 +210,112 @@
             <div class="budget-section">
                 <h2>💰 予算管理</h2>
                 
-                <!-- 月間予算設定 -->
-                <div class="budget-settings">
-                    <h3>月間予算設定</h3>
-                    <div class="form-group">
-                        <label for="monthly-budget">月間予算</label>
-                        <input type="number" id="monthly-budget" placeholder="予算を入力">
-                        <button class="btn-save-budget" id="save-budget">保存</button>
+                <!-- 予算タブ切り替えボタン -->
+                <div class="budget-tabs">
+                    <button class="budget-tab-btn active" data-budget-tab="status">📊 状況</button>
+                    <button class="budget-tab-btn" data-budget-tab="input">📝 入力</button>
+                </div>
+
+                <!-- 入力ビュー -->
+                <div class="budget-view" id="budget-input-view">
+                    <!-- 給料日設定 -->
+                    <div class="payday-settings">
+                        <h3>📅 給料日設定</h3>
+                        <div class="form-group">
+                            <label for="payday">給料日（毎月）</label>
+                            <input type="date" id="payday" placeholder="給料日を選択">
+                            <p class="form-hint">日付を選択すると、毎月その日が給料日として設定されます</p>
+                        </div>
+                        <div class="budget-buttons">
+                            <button class="btn-save-budget" id="save-payday">保存</button>
+                            <button class="btn-reset-budget" id="reset-payday">クリア</button>
+                        </div>
+                    </div>
+
+                    <!-- 月間予算設定 -->
+                    <div class="budget-settings">
+                        <h3>💰 月間予算設定</h3>
+                        <div class="form-group">
+                            <label for="monthly-budget">月間予算（全体）</label>
+                            <input type="number" id="monthly-budget" placeholder="全体の予算を入力">
+                        </div>
+                        <div class="budget-buttons">
+                            <button class="btn-save-budget" id="save-budget">保存</button>
+                            <button class="btn-reset-budget" id="reset-budget">クリア</button>
+                        </div>
+                    </div>
+
+                    <!-- カテゴリ別予算設定 -->
+                    <div class="category-budget-settings">
+                        <h3>カテゴリ別予算</h3>
+                        
+                        <!-- カテゴリ選択ボタン -->
+                        <div class="category-select-buttons">
+                            <button class="category-select-btn" data-category="食費">食費</button>
+                            <button class="category-select-btn" data-category="趣味">趣味</button>
+                            <button class="category-select-btn" data-category="娯楽">娯楽</button>
+                            <button class="category-select-btn" data-category="生活費">生活費</button>
+                            <button class="category-select-btn" data-category="光熱費">光熱費</button>
+                            <button class="category-select-btn" data-category="交通費">交通費</button>
+                            <button class="category-select-btn" data-category="その他">その他</button>
+                        </div>
+                        
+                        <!-- 選択されたカテゴリの予算入力 -->
+                        <div id="selected-category-input" style="display: none;">
+                            <div class="selected-category-form">
+                                <label id="selected-category-label">カテゴリを選択してください</label>
+                                <input type="number" id="selected-category-budget" placeholder="予算を入力">
+                                <div class="budget-buttons">
+                                    <button class="btn-save-budget" id="save-selected-category-budget">保存</button>
+                                    <button class="btn-cancel" id="cancel-category-budget">キャンセル</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 設定済みカテゴリ一覧 -->
+                        <div id="set-category-budgets">
+                            <h4>設定済み予算</h4>
+                            <div id="set-category-list"></div>
+                        </div>
+                        
+                        <div class="budget-buttons" style="margin-top: 15px;">
+                            <button class="btn-reset-budget" id="reset-category-budget">全カテゴリ予算リセット</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 予算の使用状況 -->
-                <div class="budget-summary">
-                    <h3>今月の予算使用状況</h3>
-                    <div class="budget-progress">
-                        <div class="budget-info">
-                            <span>予算: <strong id="budget-amount">¥0</strong></span>
-                            <span>使用: <strong id="used-amount">¥0</strong></span>
-                            <span>残り: <strong id="remaining-amount">¥0</strong></span>
+                <!-- 状況ビュー -->
+                <div class="budget-view active" id="budget-status-view">
+                    <!-- 1日の使用可能金額 -->
+                    <div class="daily-budget">
+                        <h3>💵 1日に使える金額</h3>
+                        <div class="daily-budget-display">
+                            <p class="daily-amount" id="daily-amount">¥0</p>
+                            <p class="daily-info" id="daily-info">給料日まで0日</p>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progress-fill"></div>
-                        </div>
-                        <p class="progress-text" id="progress-text">予算の0%を使用中</p>
                     </div>
-                </div>
 
-                <!-- カテゴリ別予算 -->
-                <div class="category-budgets">
-                    <h3>カテゴリ別使用状況</h3>
-                    <div id="category-budget-list"></div>
+                    <!-- 予算の使用状況 -->
+                    <div class="budget-summary">
+                        <h3>今月の予算使用状況</h3>
+                        <div class="budget-progress">
+                            <div class="budget-info">
+                                <span>予算: <strong id="budget-amount">¥0</strong></span>
+                                <span>使用: <strong id="used-amount">¥0</strong></span>
+                                <span>残り: <strong id="remaining-amount">¥0</strong></span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <p class="progress-text" id="progress-text">予算の0%を使用中</p>
+                        </div>
+                    </div>
+
+                    <!-- カテゴリ別予算 -->
+                    <div class="category-budgets">
+                        <h3>カテゴリ別使用状況</h3>
+                        <div id="category-budget-list"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -268,6 +344,23 @@
             <span class="nav-label">グラフ</span>
         </button>
     </nav>
+
+    <!-- 確認モーダル -->
+    <div class="modal-overlay" id="confirm-modal" style="display: none;">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header warning">
+                <span class="warning-icon">⚠️</span>
+                <h3>注意！</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="confirm-cancel">キャンセル</button>
+                <button class="btn-confirm" id="confirm-ok">OK</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

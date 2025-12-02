@@ -37,6 +37,37 @@ let createCalendarDay, displayDayTransactions;
 let showAuthScreen, showMainApp, loadUserData, saveTransactions, getErrorMessage, initializeEventListeners;
 let formatDate, showNotification;
 let updateBudgetDisplay, loadBudget;
+let customConfirm;
+
+// カスタム確認ダイアログ
+customConfirm = function(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const messageEl = document.getElementById('confirm-message');
+        const okBtn = document.getElementById('confirm-ok');
+        const cancelBtn = document.getElementById('confirm-cancel');
+        
+        messageEl.textContent = message;
+        modal.style.display = 'flex';
+        
+        const handleOk = () => {
+            modal.style.display = 'none';
+            okBtn.removeEventListener('click', handleOk);
+            cancelBtn.removeEventListener('click', handleCancel);
+            resolve(true);
+        };
+        
+        const handleCancel = () => {
+            modal.style.display = 'none';
+            okBtn.removeEventListener('click', handleOk);
+            cancelBtn.removeEventListener('click', handleCancel);
+            resolve(false);
+        };
+        
+        okBtn.addEventListener('click', handleOk);
+        cancelBtn.addEventListener('click', handleCancel);
+    });
+};
 
 // 画面表示切り替え
 showAuthScreen = function() {
@@ -242,6 +273,36 @@ navButtons.forEach(btn => {
         if (targetPage === 'calendar') {
             renderCalendar();
         }
+        
+        // 予算ページに切り替えたときは状況を更新
+        if (targetPage === 'budget') {
+            updateBudgetDisplay();
+            updateDailyBudget();
+        }
+    });
+});
+
+// 予算タブ内の切り替え
+const budgetTabButtons = document.querySelectorAll('.budget-tab-btn');
+const budgetViews = document.querySelectorAll('.budget-view');
+
+budgetTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const targetView = btn.dataset.budgetTab;
+        
+        // すべてのボタンとビューを非アクティブに
+        budgetTabButtons.forEach(b => b.classList.remove('active'));
+        budgetViews.forEach(v => v.classList.remove('active'));
+        
+        // 選択されたボタンとビューをアクティブに
+        btn.classList.add('active');
+        document.getElementById(`budget-${targetView}-view`).classList.add('active');
+        
+        // 状況ビューに切り替えたときは表示を更新
+        if (targetView === 'status') {
+            updateBudgetDisplay();
+            updateDailyBudget();
+        }
     });
 });
 
@@ -326,9 +387,264 @@ tabButtons.forEach(btn => {
     });
 });
 
+// 予算管理のイベントリスナー
+// 給料日を保存
+document.getElementById('save-payday').addEventListener('click', () => {
+    const paydayInput = document.getElementById('payday');
+    const selectedPayday = paydayInput.value;
+    
+    if (selectedPayday) {
+        // カレンダー入力から日付を取得（日だけ抽出）
+        const paydayDate = new Date(selectedPayday + 'T00:00:00');
+        payday = paydayDate.getDate();
+        
+        // Firebaseに保存
+        if (currentUser) {
+            database.ref('users/' + currentUser.uid + '/budget/payday').set(payday);
+        }
+        
+        updateDailyBudget();
+        showNotification('給料日を保存しました');
+    } else {
+        showNotification('給料日を入力してください', 'error');
+    }
+});
+
+// 給料日入力をリセット
+const resetPaydayBtn = document.getElementById('reset-payday');
+if (resetPaydayBtn) {
+    resetPaydayBtn.addEventListener('click', async () => {
+        console.log('給料日クリアボタンがクリックされました');
+        const confirmed = await customConfirm('給料日をクリアしますか？');
+        if (confirmed) {
+            payday = null;
+            document.getElementById('payday').value = '';
+            
+            // Firebaseから削除
+            if (currentUser) {
+                database.ref('users/' + currentUser.uid + '/budget/payday').remove();
+            }
+            
+            // 状況ビューの表示を即座に更新
+            const dailyAmountEl = document.getElementById('daily-amount');
+            const dailyInfoEl = document.getElementById('daily-info');
+            if (dailyAmountEl) {
+                dailyAmountEl.textContent = '―';
+                dailyAmountEl.style.color = '#999';
+            }
+            if (dailyInfoEl) {
+                dailyInfoEl.textContent = '給料日を設定してください';
+            }
+            
+            showNotification('給料日をクリアしました');
+        }
+    });
+} else {
+    console.error('給料日クリアボタンが見つかりません');
+}
+
+// 予算を保存
+document.getElementById('save-budget').addEventListener('click', () => {
+    const budgetInput = document.getElementById('monthly-budget');
+    const budget = parseInt(budgetInput.value) || 0;
+    
+    if (budget > 0) {
+        monthlyBudget = budget;
+        
+        // Firebaseに保存
+        if (currentUser) {
+            database.ref('users/' + currentUser.uid + '/budget/monthly').set(monthlyBudget);
+        }
+        
+        updateBudgetDisplay();
+        updateDailyBudget();
+        showNotification('予算を保存しました');
+    } else {
+        showNotification('予算を入力してください', 'error');
+    }
+});
+
+// カテゴリ選択ボタンのイベント
+let selectedCategory = null;
+
+document.querySelectorAll('.category-select-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        selectedCategory = btn.dataset.category;
+        
+        // すべてのボタンの選択状態をクリア
+        document.querySelectorAll('.category-select-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        
+        // 入力フォームを表示
+        const inputDiv = document.getElementById('selected-category-input');
+        const label = document.getElementById('selected-category-label');
+        const input = document.getElementById('selected-category-budget');
+        
+        inputDiv.style.display = 'block';
+        label.textContent = `${selectedCategory}の予算`;
+        
+        // 既存の予算があれば表示
+        input.value = categoryBudgets[selectedCategory] || '';
+        input.focus();
+    });
+});
+
+// 選択されたカテゴリの予算を保存
+document.getElementById('save-selected-category-budget').addEventListener('click', () => {
+    if (!selectedCategory) {
+        showNotification('カテゴリを選択してください', 'error');
+        return;
+    }
+    
+    const budgetInput = document.getElementById('selected-category-budget');
+    const budget = parseInt(budgetInput.value) || 0;
+    
+    if (budget > 0) {
+        categoryBudgets[selectedCategory] = budget;
+        
+        // Firebaseに保存
+        if (currentUser) {
+            database.ref('users/' + currentUser.uid + '/categoryBudgets').set(categoryBudgets);
+        }
+        
+        const savedCategory = selectedCategory;
+        
+        // フォームをリセット
+        budgetInput.value = '';
+        document.getElementById('selected-category-input').style.display = 'none';
+        document.querySelectorAll('.category-select-btn').forEach(b => b.classList.remove('selected'));
+        selectedCategory = null;
+        
+        updateSetCategoryList();
+        updateBudgetDisplay();
+        showNotification(`${savedCategory}の予算を保存しました`);
+    } else {
+        showNotification('予算を入力してください', 'error');
+    }
+});
+
+// カテゴリ予算入力をキャンセル（入力フォームをクリア）
+document.getElementById('cancel-category-budget').addEventListener('click', () => {
+    document.getElementById('selected-category-input').style.display = 'none';
+    document.getElementById('selected-category-budget').value = '';
+    document.querySelectorAll('.category-select-btn').forEach(b => b.classList.remove('selected'));
+    selectedCategory = null;
+});
+
+// 設定済みカテゴリ一覧を更新
+const updateSetCategoryList = function() {
+    const listDiv = document.getElementById('set-category-list');
+    listDiv.innerHTML = '';
+    
+    if (Object.keys(categoryBudgets).length === 0) {
+        listDiv.innerHTML = '<p style="color: #999; text-align: center; padding: 10px;">設定された予算はありません</p>';
+        return;
+    }
+    
+    Object.keys(categoryBudgets).forEach(category => {
+        const amount = categoryBudgets[category];
+        const item = document.createElement('div');
+        item.className = 'set-category-item';
+        item.innerHTML = `
+            <span class="category-name">${category}</span>
+            <span class="category-amount">¥${amount.toLocaleString()}</span>
+            <button class="btn-delete-category" data-category="${category}">削除</button>
+        `;
+        listDiv.appendChild(item);
+    });
+    
+    // 削除ボタンのイベント
+    document.querySelectorAll('.btn-delete-category').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const category = btn.dataset.category;
+            const confirmed = await customConfirm(`${category}の予算を削除しますか？`);
+            if (confirmed) {
+                delete categoryBudgets[category];
+                
+                // Firebaseに保存
+                if (currentUser) {
+                    database.ref('users/' + currentUser.uid + '/categoryBudgets').set(categoryBudgets);
+                }
+                
+                updateSetCategoryList();
+                updateBudgetDisplay();
+                showNotification(`${category}の予算を削除しました`);
+            }
+        });
+    });
+};
+
+// 予算入力をリセット
+const resetBudgetBtn = document.getElementById('reset-budget');
+if (resetBudgetBtn) {
+const resetBudgetBtn = document.getElementById('reset-budget');
+if (resetBudgetBtn) {
+    resetBudgetBtn.addEventListener('click', async () => {
+        console.log('予算クリアボタンがクリックされました');
+        const confirmed = await customConfirm('月間予算をクリアしますか？');
+        if (confirmed) {
+            monthlyBudget = 0;
+            document.getElementById('monthly-budget').value = '';
+            
+            // Firebaseから削除
+            if (currentUser) {
+                database.ref('users/' + currentUser.uid + '/budget/monthly').remove();
+            }
+            
+            // 状況ビューの表示を即座に更新
+            const budgetAmountEl = document.getElementById('budget-amount');
+            const usedAmountEl = document.getElementById('used-amount');
+            const remainingAmountEl = document.getElementById('remaining-amount');
+            const progressFillEl = document.getElementById('progress-fill');
+            const progressTextEl = document.getElementById('progress-text');
+            const dailyAmountEl = document.getElementById('daily-amount');
+            const dailyInfoEl = document.getElementById('daily-info');
+            
+            if (budgetAmountEl) budgetAmountEl.textContent = '未設定';
+            if (usedAmountEl) usedAmountEl.textContent = '¥0';
+            if (remainingAmountEl) remainingAmountEl.textContent = '―';
+            if (progressFillEl) progressFillEl.style.width = '0%';
+            if (progressTextEl) progressTextEl.textContent = '予算が未設定です';
+            
+            // 1日に使える金額もリセット
+            if (dailyAmountEl) {
+                dailyAmountEl.textContent = '―';
+                dailyAmountEl.style.color = '#999';
+            }
+            if (dailyInfoEl && !payday) {
+                dailyInfoEl.textContent = '給料日を設定してください';
+            }
+            
+            showNotification('予算をクリアしました');
+        }
+    });
+} else {
+    console.error('予算クリアボタンが見つかりません');
+}
+
+// カテゴリ別予算をリセット
+document.getElementById('reset-category-budget').addEventListener('click', async () => {
+    const confirmed = await customConfirm('カテゴリ別予算をすべてリセットしますか？');
+    if (confirmed) {
+        categoryBudgets = {};
+        
+        // Firebaseから削除
+        if (currentUser) {
+            database.ref('users/' + currentUser.uid + '/categoryBudgets').remove();
+        }
+        
+        updateSetCategoryList();
+        updateBudgetDisplay();
+        showNotification('カテゴリ別予算をリセットしました');
+    }
+});
+
+}; // initializeEventListeners関数の終わり
+
 // 取引を削除
-deleteTransaction = function(id) {
-    if (confirm('本当に削除しますか？')) {
+deleteTransaction = async function(id) {
+    const confirmed = await customConfirm('本当に削除しますか？');
+    if (confirmed) {
         transactions = transactions.filter(t => t.id !== id);
         saveTransactions();
         updateUI();
@@ -371,6 +687,7 @@ updateUI = function() {
     // 予算表示を更新
     if (monthlyBudget > 0) {
         updateBudgetDisplay();
+        updateDailyBudget();
     }
 };
 
@@ -1175,26 +1492,8 @@ displayDayTransactions = function(date) {
 
 // 予算管理
 let monthlyBudget = 0;
-
-// 予算を保存
-document.getElementById('save-budget').addEventListener('click', () => {
-    const budgetInput = document.getElementById('monthly-budget');
-    const budget = parseInt(budgetInput.value) || 0;
-    
-    if (budget > 0) {
-        monthlyBudget = budget;
-        
-        // Firebaseに保存
-        if (currentUser) {
-            database.ref('users/' + currentUser.uid + '/budget').set({
-                monthly: monthlyBudget
-            });
-        }
-        
-        updateBudgetDisplay();
-        showNotification('予算を保存しました');
-    }
-});
+let payday = null;
+let categoryBudgets = {};
 
 // 予算表示を更新
 updateBudgetDisplay = function() {
@@ -1213,9 +1512,15 @@ updateBudgetDisplay = function() {
     });
     
     // 予算情報を更新
-    document.getElementById('budget-amount').textContent = `¥${monthlyBudget.toLocaleString()}`;
-    document.getElementById('used-amount').textContent = `¥${monthlyExpense.toLocaleString()}`;
-    document.getElementById('remaining-amount').textContent = `¥${(monthlyBudget - monthlyExpense).toLocaleString()}`;
+    if (monthlyBudget === 0) {
+        document.getElementById('budget-amount').textContent = '未設定';
+        document.getElementById('used-amount').textContent = `¥${monthlyExpense.toLocaleString()}`;
+        document.getElementById('remaining-amount').textContent = '―';
+    } else {
+        document.getElementById('budget-amount').textContent = `¥${monthlyBudget.toLocaleString()}`;
+        document.getElementById('used-amount').textContent = `¥${monthlyExpense.toLocaleString()}`;
+        document.getElementById('remaining-amount').textContent = `¥${(monthlyBudget - monthlyExpense).toLocaleString()}`;
+    }
     
     // プログレスバーを更新
     const percentage = monthlyBudget > 0 ? (monthlyExpense / monthlyBudget) * 100 : 0;
@@ -1223,7 +1528,12 @@ updateBudgetDisplay = function() {
     const progressText = document.getElementById('progress-text');
     
     progressFill.style.width = `${Math.min(percentage, 100)}%`;
-    progressText.textContent = `予算の${percentage.toFixed(1)}%を使用中`;
+    
+    if (monthlyBudget === 0) {
+        progressText.textContent = '予算が未設定です';
+    } else {
+        progressText.textContent = `予算の${percentage.toFixed(1)}%を使用中`;
+    }
     
     // 色を変更
     progressFill.className = 'progress-fill';
@@ -1237,19 +1547,37 @@ updateBudgetDisplay = function() {
     const categoryList = document.getElementById('category-budget-list');
     categoryList.innerHTML = '';
     
-    Object.keys(categoryExpenses).forEach(category => {
-        const amount = categoryExpenses[category];
-        const categoryPercentage = monthlyBudget > 0 ? (amount / monthlyBudget) * 100 : 0;
+    // 支出があるカテゴリまたは予算設定があるカテゴリを表示
+    const allCategories = new Set([...Object.keys(categoryExpenses), ...Object.keys(categoryBudgets)]);
+    
+    allCategories.forEach(category => {
+        const amount = categoryExpenses[category] || 0;
+        const categoryBudget = categoryBudgets[category] || 0;
+        const categoryPercentage = categoryBudget > 0 ? (amount / categoryBudget) * 100 : 0;
         
         const item = document.createElement('div');
         item.className = 'category-budget-item';
+        
+        let statusClass = '';
+        if (categoryBudget > 0) {
+            if (categoryPercentage >= 100) statusClass = 'danger';
+            else if (categoryPercentage >= 80) statusClass = 'warning';
+        }
+        
         item.innerHTML = `
-            <h4>${category}</h4>
-            <p>¥${amount.toLocaleString()} (${categoryPercentage.toFixed(1)}%)</p>
-            <div class="progress-bar">
-                <div class="progress-fill ${categoryPercentage >= 100 ? 'danger' : categoryPercentage >= 80 ? 'warning' : ''}" 
-                     style="width: ${Math.min(categoryPercentage, 100)}%"></div>
+            <div class="category-header">
+                <h4>${category}</h4>
+                <div class="category-amounts">
+                    <span class="category-used">¥${amount.toLocaleString()}</span>
+                    ${categoryBudget > 0 ? `<span class="category-budget-text">/ ¥${categoryBudget.toLocaleString()}</span>` : '<span class="no-budget">予算未設定</span>'}
+                </div>
             </div>
+            ${categoryBudget > 0 ? `
+            <div class="progress-bar">
+                <div class="progress-fill ${statusClass}" style="width: ${Math.min(categoryPercentage, 100)}%"></div>
+            </div>
+            <p class="category-percent">${categoryPercentage.toFixed(1)}%</p>
+            ` : ''}
         `;
         categoryList.appendChild(item);
     });
@@ -1259,12 +1587,104 @@ updateBudgetDisplay = function() {
 loadBudget = function() {
     if (!currentUser) return;
     
+    // 全体予算と給料日を読み込み
     database.ref('users/' + currentUser.uid + '/budget').once('value', (snapshot) => {
         const budgetData = snapshot.val();
-        if (budgetData && budgetData.monthly) {
-            monthlyBudget = budgetData.monthly;
-            document.getElementById('monthly-budget').value = monthlyBudget;
+        if (budgetData) {
+            if (budgetData.monthly) {
+                monthlyBudget = budgetData.monthly;
+                document.getElementById('monthly-budget').value = monthlyBudget;
+            }
+            if (budgetData.payday) {
+                payday = budgetData.payday;
+                // カレンダー用に日付形式で設定（今月の給料日）
+                const today = new Date();
+                const paydayDate = new Date(today.getFullYear(), today.getMonth(), payday);
+                document.getElementById('payday').value = paydayDate.toISOString().split('T')[0];
+            }
+            updateBudgetDisplay();
+            updateDailyBudget();
+        }
+    });
+    
+    // カテゴリ別予算を読み込み
+    database.ref('users/' + currentUser.uid + '/categoryBudgets').once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            categoryBudgets = data;
+            updateSetCategoryList();
             updateBudgetDisplay();
         }
     });
+};
+
+// 1日の使用可能金額を計算
+const updateDailyBudget = function() {
+    const dailyAmountEl = document.getElementById('daily-amount');
+    const dailyInfoEl = document.getElementById('daily-info');
+    
+    if (!monthlyBudget && !payday) {
+        dailyAmountEl.textContent = '―';
+        dailyInfoEl.textContent = '予算と給料日を設定してください';
+        dailyAmountEl.style.color = '#999';
+        return;
+    }
+    
+    if (!payday) {
+        dailyAmountEl.textContent = '―';
+        dailyInfoEl.textContent = '給料日を設定してください';
+        dailyAmountEl.style.color = '#999';
+        return;
+    }
+    
+    // 現在の残高を計算（収入 - 支出）
+    const income = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    const expense = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    const balance = income - expense;
+    
+    const today = new Date();
+    
+    // 給料日までの日数を計算
+    const currentDay = today.getDate();
+    let daysUntilPayday;
+    
+    if (payday === 31) {
+        // 月末の場合
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        if (currentDay <= lastDay) {
+            daysUntilPayday = lastDay - currentDay + 1;
+        } else {
+            daysUntilPayday = 1;
+        }
+    } else {
+        if (currentDay <= payday) {
+            daysUntilPayday = payday - currentDay + 1;
+        } else {
+            // 次の月の給料日まで
+            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, payday);
+            const diff = nextMonth - today;
+            daysUntilPayday = Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
+        }
+    }
+    
+    // 1日の使用可能金額（残高を給料日までの日数で割る）
+    const dailyBudget = daysUntilPayday > 0 ? Math.floor(balance / daysUntilPayday) : 0;
+    
+    dailyAmountEl.textContent = `¥${dailyBudget.toLocaleString()}`;
+    dailyInfoEl.textContent = `給料日まで${daysUntilPayday}日`;
+    
+    // 色を変更
+    if (dailyBudget < 0 || dailyBudget <= 500) {
+        dailyAmountEl.style.color = '#dc3545';
+    } else if (dailyBudget < 1000) {
+        dailyAmountEl.style.color = '#333';
+    } else {
+        dailyAmountEl.style.color = '#28a745';
+    }
 };
