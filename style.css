@@ -8,8 +8,8 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #d7ccc8 0%, #bcaaa4 100%);
     min-height: 100vh;
-    padding: 20px;
-    padding-bottom: 50px;
+    padding: 15px;
+    padding-bottom: 65px;
     margin: 0;
 }
 
@@ -134,9 +134,10 @@ body {
     background: white;
     border-radius: 20px;
     padding: 30px;
+    padding-bottom: 75px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    min-height: calc(100vh - 120px);
-    max-height: calc(100vh - 120px);
+    min-height: calc(100vh - 80px);
+    max-height: calc(100vh - 80px);
     overflow-y: auto;
     position: relative;
 }
@@ -1297,6 +1298,45 @@ h2 {
     font-size: 1em;
     color: #666;
     margin: 0;
+}
+
+.today-expense-info {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.expense-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.expense-label {
+    font-size: 1em;
+    color: #555;
+    font-weight: 600;
+}
+
+.expense-value {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.comparison-row {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.comparison-text {
+    display: inline-block;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 1.3em;
+    background: rgba(255, 255, 255, 0.7);
 }
 
 .budget-buttons {

@@ -745,8 +745,14 @@ displayTransactions = function() {
         filteredTransactions = transactions.filter(t => t.type === currentFilter);
     }
     
-    // 日付順にソート（新しい順）
-    filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // 日付順（新しい順）、同じ日付なら入力順（新しい順）にソート
+    filteredTransactions.sort((a, b) => {
+        const dateCompare = new Date(b.date) - new Date(a.date);
+        if (dateCompare !== 0) {
+            return dateCompare;
+        }
+        return b.id - a.id;
+    });
     
     transactionList.innerHTML = '';
     
@@ -1826,11 +1832,15 @@ loadBudget = function() {
 const updateDailyBudget = function() {
     const dailyAmountEl = document.getElementById('daily-amount');
     const dailyInfoEl = document.getElementById('daily-info');
+    const todayExpenseEl = document.getElementById('today-expense');
+    const comparisonEl = document.getElementById('daily-comparison');
     
     if (!monthlyBudget && !payday) {
         dailyAmountEl.textContent = '―';
         dailyInfoEl.textContent = '予算と給料日を設定してください';
         dailyAmountEl.style.color = '#999';
+        if (todayExpenseEl) todayExpenseEl.textContent = '¥0';
+        if (comparisonEl) comparisonEl.textContent = '';
         return;
     }
     
@@ -1838,21 +1848,32 @@ const updateDailyBudget = function() {
         dailyAmountEl.textContent = '―';
         dailyInfoEl.textContent = '給料日を設定してください';
         dailyAmountEl.style.color = '#999';
+        if (todayExpenseEl) todayExpenseEl.textContent = '¥0';
+        if (comparisonEl) comparisonEl.textContent = '';
         return;
     }
     
-    // 現在の残高を計算（収入 - 支出）
-    const income = transactions
-        .filter(t => t.type === 'income')
-        .reduce((sum, t) => sum + t.amount, 0);
-    
-    const expense = transactions
-        .filter(t => t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
-    
-    const balance = income - expense;
-    
     const today = new Date();
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const yesterdayDate = new Date(today);
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayString = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, '0')}-${String(yesterdayDate.getDate()).padStart(2, '0')}`;
+    
+    // 前日までの残高を計算（今日の取引は含まない）
+    const incomeUntilYesterday = transactions
+        .filter(t => t.type === 'income' && t.date < todayString)
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    const expenseUntilYesterday = transactions
+        .filter(t => t.type === 'expense' && t.date < todayString)
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    const balanceUntilYesterday = incomeUntilYesterday - expenseUntilYesterday;
+    
+    // 今日の支出を計算
+    const todayExpense = transactions
+        .filter(t => t.type === 'expense' && t.date === todayString)
+        .reduce((sum, t) => sum + t.amount, 0);
     
     // 給料日までの日数を計算
     const currentDay = today.getDate();
@@ -1877,11 +1898,31 @@ const updateDailyBudget = function() {
         }
     }
     
-    // 1日の使用可能金額（残高を給料日までの日数で割る）
-    const dailyBudget = daysUntilPayday > 0 ? Math.floor(balance / daysUntilPayday) : 0;
+    // 1日の使用可能金額（前日までの残高を給料日までの日数で割る）
+    const dailyBudget = daysUntilPayday > 0 ? Math.floor(balanceUntilYesterday / daysUntilPayday) : 0;
     
     dailyAmountEl.textContent = `¥${dailyBudget.toLocaleString()}`;
-    dailyInfoEl.textContent = `給料日まで${daysUntilPayday}日`;
+    dailyInfoEl.textContent = `給料日まで${daysUntilPayday}日（前日までの残高より計算）`;
+    
+    // 今日の支出を表示
+    if (todayExpenseEl) {
+        todayExpenseEl.textContent = `¥${todayExpense.toLocaleString()}`;
+    }
+    
+    // 今日の支出と1日の予算を比較
+    if (comparisonEl) {
+        const diff = dailyBudget - todayExpense;
+        if (todayExpense === 0) {
+            comparisonEl.textContent = '本日はまだ支出がありません';
+            comparisonEl.style.color = '#999';
+        } else if (todayExpense > dailyBudget) {
+            comparisonEl.textContent = `予算オーバー: ¥${Math.abs(diff).toLocaleString()}`;
+            comparisonEl.style.color = '#dc3545';
+        } else {
+            comparisonEl.textContent = `予算内: 残り¥${diff.toLocaleString()}`;
+            comparisonEl.style.color = '#28a745';
+        }
+    }
     
     // 色を変更
     if (dailyBudget < 0 || dailyBudget <= 500) {
