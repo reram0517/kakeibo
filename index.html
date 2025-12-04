@@ -80,7 +80,43 @@
                 </div>
             </div>
 
-            <!-- 取引履歴 -->
+            <!-- 今月の支出サマリー -->
+            <div class="month-expense-summary">
+                <div class="expense-summary-item">
+                    <span class="summary-label">先月の支出:</span>
+                    <span class="summary-value" id="prev-month-expense">¥0</span>
+                </div>
+                <div class="expense-summary-item">
+                    <span class="summary-label">今月の支出:</span>
+                    <span class="summary-value" id="current-month-expense">¥0</span>
+                </div>
+                <div class="expense-summary-item">
+                    <span class="summary-label">先月比:</span>
+                    <span class="summary-value" id="month-comparison">-</span>
+                </div>
+            </div>
+            
+            <!-- 前日との支出比較 -->
+            <div class="daily-comparison-section">
+                <div class="comparison-summary">
+                    <div class="comparison-summary-item">
+                        <span class="summary-label">昨日の支出:</span>
+                        <span class="summary-value" id="yesterday-expense">¥0</span>
+                    </div>
+                    <div class="comparison-summary-item">
+                        <span class="summary-label">今日の支出:</span>
+                        <span class="summary-value" id="today-expense">¥0</span>
+                    </div>
+                    <div class="comparison-summary-item">
+                        <span class="summary-label">前日比:</span>
+                        <span class="summary-value" id="day-comparison">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 履歴画面 -->
+        <div class="page-content" id="page-history">
             <div class="history-section">
                 <h2>取引履歴</h2>
                 <div class="filter-buttons">
@@ -184,19 +220,29 @@
             <div class="charts-section">
                 <h2>📈 グラフ</h2>
                 
-                <!-- 今月の支出サマリー -->
-                <div class="month-expense-summary">
-                    <div class="expense-summary-item">
-                        <span class="summary-label">今月の支出:</span>
-                        <span class="summary-value" id="current-month-expense">¥0</span>
-                    </div>
-                    <div class="expense-summary-item">
-                        <span class="summary-label">先月比:</span>
-                        <span class="summary-value" id="month-comparison">-</span>
-                    </div>
-                </div>
-                
                 <div class="charts-container">
+                    <div class="chart-box chart-large">
+                        <div class="expense-chart-header">
+                            <h3 id="expense-chart-title">支出のみの推移（今週）</h3>
+                            <div class="expense-nav-buttons">
+                                <button class="expense-nav-btn" id="prev-expense-week">◀ 前の週</button>
+                                <button class="expense-nav-btn" id="next-expense-week">次の週 ▶</button>
+                            </div>
+                        </div>
+                        <canvas id="expenseOnlyChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>カテゴリ別支出</h3>
+                        <div class="pie-chart-tabs">
+                            <button class="pie-chart-tab-btn active" data-period="total">総支出</button>
+                            <button class="pie-chart-tab-btn" data-period="monthly">今月</button>
+                        </div>
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <h3>月別支出推移（過去6ヶ月）</h3>
+                        <canvas id="monthlyExpenseChart"></canvas>
+                    </div>
                     <div class="chart-box chart-large">
                         <div class="line-chart-header">
                             <div class="chart-tabs">
@@ -212,18 +258,6 @@
                             </div>
                         </div>
                         <canvas id="lineChart"></canvas>
-                    </div>
-                    <div class="chart-box">
-                        <h3>カテゴリ別支出</h3>
-                        <div class="pie-chart-tabs">
-                            <button class="pie-chart-tab-btn active" data-period="total">総支出</button>
-                            <button class="pie-chart-tab-btn" data-period="monthly">今月</button>
-                        </div>
-                        <canvas id="pieChart"></canvas>
-                    </div>
-                    <div class="chart-box">
-                        <h3>月別支出推移（過去6ヶ月）</h3>
-                        <canvas id="monthlyExpenseChart"></canvas>
                     </div>
                     <div class="chart-box chart-large">
                         <h3>残高推移（過去2週間）</h3>
@@ -324,7 +358,7 @@
                         <div class="today-expense-info">
                             <div class="expense-row">
                                 <span class="expense-label">本日の支出:</span>
-                                <span class="expense-value" id="today-expense">¥0</span>
+                                <span class="expense-value" id="budget-today-expense">¥0</span>
                             </div>
                             <div class="comparison-row">
                                 <span class="comparison-text" id="daily-comparison"></span>
@@ -363,6 +397,10 @@
         <button class="nav-btn active" data-page="home">
             <span class="nav-icon">🏠</span>
             <span class="nav-label">ホーム</span>
+        </button>
+        <button class="nav-btn" data-page="history">
+            <span class="nav-icon">📜</span>
+            <span class="nav-label">履歴</span>
         </button>
         <button class="nav-btn" data-page="add">
             <span class="nav-icon">➕</span>

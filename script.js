@@ -26,21 +26,24 @@ let lineChart = null;
 let pieChart = null;
 let balanceChart = null;
 let monthlyExpenseChart = null;
+let expenseOnlyChart = null;
 let currentChartView = 'daily';
 let currentMonth = new Date();
 let selectedDate = new Date();
 let currentWeekOffset = 0;
 let currentMonthOffset = 0;
 let currentPieChartPeriod = 'total';
+let currentExpenseWeekOffset = 0;
 
 // 前方宣言（関数は後で定義）
 let updateUI, updateSummary, displayTransactions, updateCharts, renderCalendar;
-let formatCurrency, editTransaction, deleteTransaction, updateLineChart, updatePieChart, updateBalanceChart, updateMonthlyExpenseChart;
+let formatCurrency, editTransaction, deleteTransaction, updateLineChart, updatePieChart, updateBalanceChart, updateMonthlyExpenseChart, updateExpenseOnlyChart;
 let createCalendarDay, displayDayTransactions;
 let showAuthScreen, showMainApp, loadUserData, saveTransactions, getErrorMessage, initializeEventListeners;
 let formatDate, showNotification;
 let updateBudgetDisplay, loadBudget;
 let customConfirm;
+let updateDailyComparison;
 
 // カスタム確認ダイアログ
 customConfirm = function(message) {
@@ -262,6 +265,24 @@ document.getElementById('next-week').addEventListener('click', () => {
     updateLineChart();
 });
 
+// 支出グラフのナビゲーションボタン（存在する場合のみ）
+const prevExpenseWeekBtn = document.getElementById('prev-expense-week');
+const nextExpenseWeekBtn = document.getElementById('next-expense-week');
+
+if (prevExpenseWeekBtn) {
+    prevExpenseWeekBtn.addEventListener('click', () => {
+        currentExpenseWeekOffset++;
+        updateExpenseOnlyChart();
+    });
+}
+
+if (nextExpenseWeekBtn) {
+    nextExpenseWeekBtn.addEventListener('click', () => {
+        currentExpenseWeekOffset--;
+        updateExpenseOnlyChart();
+    });
+}
+
 // ナビゲーションタブのイベント
 navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -285,8 +306,21 @@ navButtons.forEach(btn => {
             renderCalendar();
         }
         
-        // 予算ページに切り替えたときは状況を更新
+        // 予算ページに切り替えたときは状況を更新し、状況ビューを表示
         if (targetPage === 'budget') {
+            // 予算タブを状況に切り替え
+            const budgetTabButtons = document.querySelectorAll('.budget-tab-btn');
+            const budgetViews = document.querySelectorAll('.budget-view');
+            
+            budgetTabButtons.forEach(b => b.classList.remove('active'));
+            budgetViews.forEach(v => v.classList.remove('active'));
+            
+            const statusBtn = document.querySelector('[data-budget-tab="status"]');
+            if (statusBtn) {
+                statusBtn.classList.add('active');
+            }
+            document.getElementById('budget-status-view').classList.add('active');
+            
             updateBudgetDisplay();
             updateDailyBudget();
         }
@@ -707,10 +741,8 @@ updateUI = function() {
         renderCalendar();
     }
     // 予算表示を更新
-    if (monthlyBudget > 0) {
-        updateBudgetDisplay();
-        updateDailyBudget();
-    }
+    updateBudgetDisplay();
+    updateDailyBudget();
 };
 
 // サマリーを更新
@@ -735,6 +767,10 @@ updateSummary = function() {
     } else {
         balanceEl.style.color = '#dc3545';
     }
+    
+    // ホーム画面の比較情報も更新
+    updateMonthExpenseComparison();
+    updateDailyComparison();
 }
 
 // 取引を表示
@@ -841,7 +877,9 @@ updateCharts = function() {
     updatePieChart();
     updateBalanceChart();
     updateMonthlyExpenseChart();
+    updateExpenseOnlyChart();
     updateMonthExpenseComparison();
+    updateDailyComparison();
 }
 
 // 月別収支推移グラフ
@@ -1425,6 +1463,143 @@ updateMonthlyExpenseChart = function() {
     });
 }
 
+// 支出のみの折れ線グラフ（3週間分の連続表示）
+updateExpenseOnlyChart = function() {
+    const ctx = document.getElementById('expenseOnlyChart');
+    if (!ctx) return;
+    
+    const daysData = {};
+    const today = new Date();
+    
+    // タイトルを更新
+    const titleEl = document.getElementById('expense-chart-title');
+    const weekText = currentExpenseWeekOffset === 0 ? '今週' : 
+                    currentExpenseWeekOffset === 1 ? '先週' :
+                    currentExpenseWeekOffset > 1 ? `${currentExpenseWeekOffset}週間前` :
+                    `${Math.abs(currentExpenseWeekOffset)}週間後`;
+    if (titleEl) {
+        titleEl.textContent = `支出のみの推移（${weekText}）`;
+    }
+    
+    // 過去1週間のラベルを作成（オフセットを考慮）
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - (currentExpenseWeekOffset * 7) - i);
+        const key = `${date.getMonth() + 1}/${date.getDate()}`;
+        const fullKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        daysData[key] = { fullKey: fullKey, expense: 0 };
+    }
+    
+    // 取引データを集計
+    transactions.forEach(t => {
+        if (t.type === 'expense') {
+            Object.keys(daysData).forEach(k => {
+                if (daysData[k].fullKey === t.date) {
+                    daysData[k].expense += t.amount;
+                }
+            });
+        }
+    });
+    
+    const labels = Object.keys(daysData);
+    const expenseData = Object.values(daysData).map(d => d.expense);
+    
+    // 既存のグラフを破棄
+    if (expenseOnlyChart) {
+        expenseOnlyChart.destroy();
+    }
+    
+    // 新しいグラフを作成
+    expenseOnlyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '支出',
+                    data: expenseData,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    segment: {
+                        borderColor: function(context) {
+                            if (context.p0DataIndex === 0) {
+                                return '#999';
+                            }
+                            const current = context.p1.parsed.y;
+                            const previous = context.p0.parsed.y;
+                            return current > previous ? '#dc3545' : '#28a745';
+                        },
+                        backgroundColor: function(context) {
+                            if (context.p0DataIndex === 0) {
+                                return 'rgba(153, 153, 153, 0.1)';
+                            }
+                            const current = context.p1.parsed.y;
+                            const previous = context.p0.parsed.y;
+                            return current > previous ? 'rgba(220, 53, 69, 0.1)' : 'rgba(40, 167, 69, 0.1)';
+                        }
+                    },
+                    pointBackgroundColor: function(context) {
+                        if (context.dataIndex === 0) {
+                            return '#999';
+                        }
+                        const current = context.parsed.y;
+                        const previous = expenseData[context.dataIndex - 1];
+                        return current > previous ? '#dc3545' : '#28a745';
+                    },
+                    pointBorderColor: function(context) {
+                        if (context.dataIndex === 0) {
+                            return '#999';
+                        }
+                        const current = context.parsed.y;
+                        const previous = expenseData[context.dataIndex - 1];
+                        return current > previous ? '#dc3545' : '#28a745';
+                    }
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.parsed.y;
+                            let label = `支出: ¥${value.toLocaleString()}`;
+                            
+                            // 前日比を計算
+                            if (context.dataIndex > 0) {
+                                const prevValue = context.dataset.data[context.dataIndex - 1];
+                                const diff = value - prevValue;
+                                const sign = diff >= 0 ? '+' : '';
+                                label += `\n前日比: ${sign}¥${diff.toLocaleString()}`;
+                            }
+                            
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '¥' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
 // 今月と先月の支出比較を表示
 updateMonthExpenseComparison = function() {
     const today = new Date();
@@ -1443,6 +1618,12 @@ updateMonthExpenseComparison = function() {
     const prevMonthExpense = transactions
         .filter(t => t.date.startsWith(prevMonthString) && t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
+    
+    // 先月の支出を表示
+    const prevMonthEl = document.getElementById('prev-month-expense');
+    if (prevMonthEl) {
+        prevMonthEl.textContent = `¥${prevMonthExpense.toLocaleString()}`;
+    }
     
     // 今月の支出を表示
     const currentMonthEl = document.getElementById('current-month-expense');
@@ -1468,6 +1649,57 @@ updateMonthExpenseComparison = function() {
     } else if (comparisonEl) {
         comparisonEl.textContent = '-';
         comparisonEl.className = 'summary-value';
+    }
+}
+
+// 前日との支出比較を更新
+updateDailyComparison = function() {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const yesterdayString = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    
+    // 今日の支出を計算
+    const todayExpense = transactions
+        .filter(t => t.date === todayString && t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    // 昨日の支出を計算
+    const yesterdayExpense = transactions
+        .filter(t => t.date === yesterdayString && t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+    
+    // 表示を更新
+    const yesterdayExpenseEl = document.getElementById('yesterday-expense');
+    const todayExpenseEl = document.getElementById('today-expense');
+    const dayComparisonEl = document.getElementById('day-comparison');
+    
+    if (yesterdayExpenseEl) {
+        yesterdayExpenseEl.textContent = `¥${yesterdayExpense.toLocaleString()}`;
+    }
+    
+    if (todayExpenseEl) {
+        todayExpenseEl.textContent = `¥${todayExpense.toLocaleString()}`;
+    }
+    
+    if (dayComparisonEl && yesterdayExpense > 0) {
+        const diff = todayExpense - yesterdayExpense;
+        const diffPercent = ((diff / yesterdayExpense) * 100).toFixed(1);
+        const sign = diff >= 0 ? '+' : '';
+        
+        dayComparisonEl.textContent = `${sign}¥${diff.toLocaleString()} (${sign}${diffPercent}%)`;
+        dayComparisonEl.className = 'summary-value';
+        
+        if (diff >= 0) {
+            dayComparisonEl.classList.add('positive');
+        } else {
+            dayComparisonEl.classList.add('negative');
+        }
+    } else if (dayComparisonEl) {
+        dayComparisonEl.textContent = '-';
+        dayComparisonEl.className = 'summary-value';
     }
 }
 
@@ -1832,7 +2064,7 @@ loadBudget = function() {
 const updateDailyBudget = function() {
     const dailyAmountEl = document.getElementById('daily-amount');
     const dailyInfoEl = document.getElementById('daily-info');
-    const todayExpenseEl = document.getElementById('today-expense');
+    const todayExpenseEl = document.getElementById('budget-today-expense');
     const comparisonEl = document.getElementById('daily-comparison');
     
     if (!monthlyBudget && !payday) {
