@@ -763,6 +763,37 @@ h2 {
         font-size: 1.4em;
     }
 
+    /* 先月比・前日比の調整 */
+    .month-expense-summary {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .expense-summary-item .summary-label {
+        font-size: 0.75em;
+        margin-bottom: 4px;
+    }
+
+    .expense-summary-item .summary-value {
+        font-size: 1em;
+    }
+
+    .comparison-summary {
+        flex-direction: column;
+        gap: 10px;
+        padding: 15px;
+    }
+
+    .comparison-summary-item .summary-label {
+        font-size: 0.75em;
+        margin-bottom: 4px;
+    }
+
+    .comparison-summary-item .summary-value {
+        font-size: 1em;
+    }
+
     .calendar-day-number {
         font-size: 0.85em;
     }
