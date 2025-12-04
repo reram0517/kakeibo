@@ -763,35 +763,23 @@ h2 {
         font-size: 1.4em;
     }
 
-    /* 先月比・前日比の調整 */
+    /* ホーム画面の比較セクションの金額を調整 */
     .month-expense-summary {
-        flex-direction: column;
-        gap: 10px;
         padding: 15px;
-    }
-
-    .expense-summary-item .summary-label {
-        font-size: 0.75em;
-        margin-bottom: 4px;
+        gap: 15px;
     }
 
     .expense-summary-item .summary-value {
-        font-size: 1em;
+        font-size: 1.1em;
     }
 
     .comparison-summary {
-        flex-direction: column;
-        gap: 10px;
         padding: 15px;
-    }
-
-    .comparison-summary-item .summary-label {
-        font-size: 0.75em;
-        margin-bottom: 4px;
+        gap: 15px;
     }
 
     .comparison-summary-item .summary-value {
-        font-size: 1em;
+        font-size: 1.1em;
     }
 
     .calendar-day-number {
