@@ -850,6 +850,22 @@ h2 {
     transform: translateZ(0);
 }
 
+/* iPhoneのWebアプリモード専用スタイル */
+@media (display-mode: standalone) {
+    .bottom-nav {
+        bottom: 20px;
+        padding-bottom: 0;
+    }
+    
+    body {
+        padding-bottom: 85px;
+    }
+    
+    .container {
+        padding-bottom: 95px;
+    }
+}
+
 .nav-btn {
     display: flex;
     flex-direction: column;
