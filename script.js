@@ -99,6 +99,12 @@ showMainApp = function() {
         // 今日の日付をデフォルトにセット
         document.getElementById('date').valueAsDate = new Date();
         
+        // 前回選択したカテゴリを復元
+        const lastCategory = localStorage.getItem('lastCategory');
+        if (lastCategory) {
+            document.getElementById('category').value = lastCategory;
+        }
+        
         // イベントリスナーを設定
         initializeEventListeners();
         
@@ -406,6 +412,8 @@ form.addEventListener('submit', (e) => {
         showNotification('取引を追加しました！');
     }
     
+    // 選択したカテゴリを記憶
+    localStorage.setItem('lastCategory', category);
     
     saveTransactions();
     updateUI();
@@ -413,6 +421,12 @@ form.addEventListener('submit', (e) => {
     // フォームをリセット
     form.reset();
     document.getElementById('date').valueAsDate = new Date();
+    
+    // 前回選択したカテゴリを復元
+    const lastCategory = localStorage.getItem('lastCategory');
+    if (lastCategory) {
+        document.getElementById('category').value = lastCategory;
+    }
     
     // 入力画面に留まる（何もしない）
 });
