@@ -141,6 +141,7 @@ body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     position: relative;
+    touch-action: pan-y;
 }
 
 h1 {
@@ -826,6 +827,7 @@ h2 {
 /* ページコンテンツの表示切り替え */
 .page-content {
     display: none;
+    width: 100%;
 }
 
 .page-content.active {
