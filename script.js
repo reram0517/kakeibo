@@ -296,6 +296,12 @@ navButtons.forEach(btn => {
         btn.classList.add('active');
         document.getElementById(`page-${targetPage}`).classList.add('active');
         
+        // タブ切り替え時にコンテナのスクロール位置をトップにリセット
+        const container = document.querySelector('.container');
+        if (container) {
+            container.scrollTop = 0;
+        }
+        
         // グラフページに切り替えたときはグラフを更新
         if (targetPage === 'charts') {
             updateCharts();
